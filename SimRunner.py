@@ -443,3 +443,36 @@ def MuChSource_Mover(n_channels, telescope_param, calibration_channel, noise_par
     endtime = time.time()
     print "Runtime", endtime - starttime
     return
+
+
+def max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param,
+    sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
+    starttime = time.time()
+
+    if telescope_param[0] == 'square' \
+            or telescope_param[0] == 'hex' \
+            or telescope_param[0] == 'doublehex' \
+            or telescope_param[0] == 'doublesquare' \
+            or telescope_param[0] == 'linear':
+        xyz_positions = xyz_position_creator(telescope_param)
+    else:
+        xyz_positions = antenna_table_loader(telescope_param[0])
+
+    frequency_range = numpy.array([calibration_channel])
+    gain_table = antenna_gain_creator(xyz_positions, frequency_range)
+
+    for sigma in range(offset_range):
+        for S_peak in range(peak_range) :
+            for iteration in range(n_iterations):
+
+                x_offset = numpy.random.normal(0,sigma,gain_table[:,1].shape)
+                y_offset = numpy.random.normal(0, sigma, gain_table[:, 2].shape)
+                gain_table[:,1]+= x_offset
+                gain_table[:,2]+= y_offset
+
+                baseline_table = baseline_converter(xyz_positions, gain_table,
+                                                    frequency_range)
+                red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
+                # Calculate the solving matrices (only needs to be once)
+                amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
+                    red_baseline_table, xyz_positions)
