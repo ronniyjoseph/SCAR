@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/SCAR.iml" filepath="$PROJECT_DIR$/.idea/SCAR.iml" />
+      <module fileurl="file:///private/var/folders/j7/4dwlf0gx0kd3pdq6hwbqqwvm0000gn/T/SkyModel.py/.idea/SkyModel.py.iml" filepath="/private/var/folders/j7/4dwlf0gx0kd3pdq6hwbqqwvm0000gn/T/SkyModel.py/.idea/SkyModel.py.iml" />
     </modules>
   </component>
 </project>
