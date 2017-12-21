@@ -64,36 +64,14 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
         red_baseline_table, xyz_positions)
 
-    type_sim = ""
-
-    if noise_param[0]:
-        iterations = 1001
-        type_sim += " noisy "
-    else:
-        iterations = 1
-        type_sim += " ideal "
-
-    if sky_param[0] == 'background' or sky_param[0] == 'point_and_background':
-        iterations = 1001
+    #Double check input parameters whether they suit the requirements if not change them.
+    iterations, sky_steps, type_sim = check_noise_and_sky_parameters(noise_param, sky_param, sky_steps)
 
     # Create empty 3D table to store calibration results as a function
     # of realization and sky positions
     n_measurements = red_baseline_table.shape[0]
     n_tiles = len(red_tiles)
     n_groups = len(red_groups)
-
-    if sky_param[0] == "point" or sky_param[0] == 'point_and_background':
-        if sky_param[0] == "point":
-            type_sky = "%s Jy point source sky" % str(sky_param[1])
-        elif sky_param[0] == 'point_and_background':
-            type_sky = "%s Jy point source and background sky" % str(sky_param[1])
-
-    elif sky_param[0] == 'background':
-        sky_steps = 1
-        type_sky = 'background sky'
-    else:
-        sys.exit(sky_param[0] + " is an invalid sky model parameter. Please " + \
-                 "choose from 'point' or 'background' or 'point_and_background'")
 
     noisy_amp_solutions = numpy.zeros((n_tiles + n_groups,
                                        sky_steps, iterations))
@@ -445,6 +423,38 @@ def MuChSource_Mover(n_channels, telescope_param, calibration_channel, noise_par
     return
 
 
+
+def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps):
+    type_sim = ""
+
+    if noise_param[0]:
+        iterations = 1001
+        type_sim += " noisy "
+    else:
+        iterations = 1
+        type_sim += " ideal "
+
+    if sky_param[0] == 'background' or sky_param[0] == 'point_and_background':
+        iterations = 1001
+
+    if sky_param[0] == "point" or sky_param[0] == 'point_and_background':
+        if sky_param[0] == "point":
+            type_sky = "%s Jy point source sky" % str(sky_param[1])
+        elif sky_param[0] == 'point_and_background':
+            type_sky = "%s Jy point source and background sky" % str(sky_param[1])
+
+    elif sky_param[0] == 'background':
+        sky_steps = 1
+        type_sky = 'background sky'
+    else:
+        sys.exit(sky_param[0] + " is an invalid sky model parameter. Please " + \
+                 "choose from 'point' or 'background' or 'point_and_background'")
+
+    return iterations, sky_steps, type_sim
+
+
+
+
 def max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param,
     sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
     starttime = time.time()
@@ -460,19 +470,44 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
 
     frequency_range = numpy.array([calibration_channel])
     gain_table = antenna_gain_creator(xyz_positions, frequency_range)
+    baseline_table = baseline_converter(xyz_positions, gain_table,
+                                        frequency_range)
+    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
+    # Calculate the solving matrices (only needs to be once)
+    amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
+        red_baseline_table, xyz_positions)
+
+    # Create empty 3D table to store calibration results as a function
+    # of realization and sky positions
+    n_measurements = red_baseline_table.shape[0]
+    n_tiles = len(red_tiles)
+    n_groups = len(red_groups)
+
+
+    noisy_amp_solutions = numpy.zeros((n_tiles + n_groups,n_offsets
+                                       n_peakfluxes, iterations))
+    noisy_phase_solutions = numpy.zeros((n_tiles + n_groups,n_offsets
+                                       n_peakfluxes, iterations))
 
     for sigma in range(offset_range):
         for S_peak in range(peak_range) :
             for iteration in range(n_iterations):
 
-                x_offset = numpy.random.normal(0,sigma,gain_table[:,1].shape)
-                y_offset = numpy.random.normal(0, sigma, gain_table[:, 2].shape)
-                gain_table[:,1]+= x_offset
-                gain_table[:,2]+= y_offset
+                while True:
+                    x_offset = numpy.random.normal(0,sigma,gain_table[:,1].shape)
+                    y_offset = numpy.random.normal(0, sigma, gain_table[:, 2].shape)
+                    gain_table[:,1]+= x_offset
+                    gain_table[:,2]+= y_offset
 
-                baseline_table = baseline_converter(xyz_positions, gain_table,
+                    baseline_table = baseline_converter(xyz_positions, gain_table,
                                                     frequency_range)
-                red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
-                # Calculate the solving matrices (only needs to be once)
-                amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
-                    red_baseline_table, xyz_positions)
+                    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
+                    # Calculate the solving matrices (only needs to be once)
+                    amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
+                        red_baseline_table, xyz_positions)
+
+                    if len(red_tiles) == n_tiles and len(red_groups) == n_groups:
+                        break
+
+
+
