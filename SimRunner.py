@@ -12,6 +12,7 @@ from RadioTelescope import antenna_table_loader
 from GeneralTools import unique_value_finder
 from GeneralTools import position_finder
 from GeneralTools import solution_averager
+from GeneralTools import FourD_solution_averager
 from GeneralTools import visibility_histogram_plotter
 from GeneralTools import solution_histogram_plotter
 from GeneralTools import TrueSolutions_Organizer
@@ -97,7 +98,7 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
     random_seeds = numpy.arange(iterations)
     sky_coords = numpy.linspace(-1, 1, sky_steps)
     print ""
-    print "Simulating redundant calibration with a" + type_sim + type_sky
+    print "Simulating redundant calibration with a" + type_sim
 
     for j in range(iterations):
         if numpy.mod(j, 100) == 0:
@@ -456,8 +457,13 @@ def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps):
 
 
 def max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param,
-    sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
+    beam_param, calibration_scheme,peakflux_range,offset_range, iterations, save_to_disk):
     starttime = time.time()
+
+    peakfluxes = numpy.logspace(peakflux_range[0],peakflux_range[1],peakflux_range[2])
+    offsets = numpy.logspace(offset_range[0], offset_range[1], offset_range[2])
+
+    random_seeds = numpy.arange(iterations)
 
     if telescope_param[0] == 'square' \
             or telescope_param[0] == 'hex' \
@@ -482,32 +488,97 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
     n_measurements = red_baseline_table.shape[0]
     n_tiles = len(red_tiles)
     n_groups = len(red_groups)
+    n_peakfluxes = len(peakfluxes)
+    n_offsets = len(offsets)
 
-
-    noisy_amp_solutions = numpy.zeros((n_tiles + n_groups,n_offsets
+    noisy_amp_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
                                        n_peakfluxes, iterations))
-    noisy_phase_solutions = numpy.zeros((n_tiles + n_groups,n_offsets
+    noisy_phase_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
+                                         n_peakfluxes, iterations))
+    ideal_amp_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
                                        n_peakfluxes, iterations))
+    ideal_phase_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
+                                         n_peakfluxes, iterations))
 
-    for sigma in range(offset_range):
-        for S_peak in range(peak_range) :
-            for iteration in range(n_iterations):
+    random_seeds = numpy.arange(iterations)
+    iteration_counter = 0
+    for iteration in range(iterations):
+        sigma_counter = 0
+        seed =  random_seeds[iteration_counter]
+        for sigma in offsets:
+            array_counter = 0
+            array_success = False
+            while True:
 
-                while True:
-                    x_offset = numpy.random.normal(0,sigma,gain_table[:,1].shape)
-                    y_offset = numpy.random.normal(0, sigma, gain_table[:, 2].shape)
-                    gain_table[:,1]+= x_offset
-                    gain_table[:,2]+= y_offset
+                x_offset = numpy.random.normal(0, sigma, gain_table[:, 1].shape)
+                y_offset = numpy.random.normal(0, sigma, gain_table[:, 2].shape)
+                gain_table[:, 1] += x_offset
+                gain_table[:, 2] += y_offset
 
-                    baseline_table = baseline_converter(xyz_positions, gain_table,
+                baseline_table = baseline_converter(xyz_positions, gain_table,
                                                     frequency_range)
-                    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
-                    # Calculate the solving matrices (only needs to be once)
-                    amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
-                        red_baseline_table, xyz_positions)
+                red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
+                # Calculate the solving matrices (only needs to be once)
+                amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
+                    red_baseline_table, xyz_positions)
 
-                    if len(red_tiles) == n_tiles and len(red_groups) == n_groups:
-                        break
+                if array_counter > 100:
+                    array_success = False
+                    break
 
+                if len(red_tiles) == n_tiles and len(red_groups) == n_groups:
+                    array_success = True
+                    break
+                array_counter += 1
 
+            S_peak_counter = 0
+            for S_peak in peakfluxes:
+                if array_success:
+                    source_l = numpy.random.uniform(-1,1,1)
+                    source_m = numpy.random.uniform(-1,1,1)
+                    sky_model = ['point_and_background',S_peak,source_l,source_m]
+                    obs_visibilities, ideal_visibilities, model_visibilities = \
+                        CreateVisibilities(red_baseline_table, frequency_range,
+                                           noise_param, sky_model, beam_param, seed)
 
+                    if calibration_scheme == 'lincal':
+                        true_solutions = TrueSolutions_Organizer(gain_table,
+                                                                 model_visibilities, red_baseline_table, red_tiles,
+                                                                 red_groups)
+                        calibration_param = ['lincal', true_solutions]
+                    elif calibration_scheme == 'logcal' or calibration_scheme == 'full':
+                        calibration_param = [calibration_scheme]
+                    else:
+                        sys.exit("You've chosen an invalid calibration parameter")
+
+                    # Use the visibility data  to solve for the antenna gains
+                    noisy_amp_data, noisy_phase_data = Redundant_Calibrator(
+                        amp_matrix, phase_matrix, obs_visibilities,
+                        red_baseline_table, red_tiles, red_groups, calibration_param)
+
+                    ideal_amp_data, ideal_phase_data = Redundant_Calibrator(
+                        amp_matrix, phase_matrix, ideal_visibilities,
+                        red_baseline_table, red_tiles, red_groups, calibration_param)
+
+                    noisy_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = noisy_amp_data
+                    noisy_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = noisy_phase_data
+                    ideal_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = ideal_amp_data
+                    ideal_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = ideal_phase_data
+                else:
+                    noisy_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
+                    noisy_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
+                    ideal_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
+                    ideal_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
+
+                S_peak_counter += 1
+            sigma_counter += 1
+        iteration_counter += 1
+
+    noisy_amp_info, noisy_phase_info = FourD_solution_averager(noisy_amp_solutions, noisy_phase_solutions, red_groups,
+                            red_tiles, peakfluxes, offsets, save_to_disk)
+    ideal_amp_info, ideal_phase_info = FourD_solution_averager(ideal_amp_solutions, ideal_phase_solutions, red_groups,
+                            red_tiles, peakfluxes, offsets, save_to_disk)
+
+    endtime = time.time()
+    print "Runtime", endtime - starttime
+    return

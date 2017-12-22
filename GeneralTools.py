@@ -1,4 +1,5 @@
 import numpy
+import h5py
 import os
 import subprocess
 from scipy import interpolate
@@ -79,6 +80,34 @@ def solution_averager(amp_solutions, phase_solutions, red_tiles, \
                      [phase_means, phase_devs], noise_param[0], direction=direction)
     return [amp_means, amp_devs], [phase_means, phase_devs]
 
+def FourD_solution_averager(amp_solutions, phase_solutions, red_groups,
+                         red_tiles, peak_fluxes, sigma_offsets, save_to_disk):
+
+    iterations = len(amp_solutions[0, 0, 0, :])
+
+    # Set the antenna numbers
+    solution_index = numpy.concatenate((red_tiles, red_groups))
+
+
+
+    # calculate averages and standard deviations
+    amp_means = numpy.median(amp_solutions, axis=3)
+    amp_devs = numpy.std(amp_solutions, axis=3)
+    # amp_devs[1:,1:] = numpy.subtract( \
+    #	*numpy.percentile(amp_solutions,[75,25],axis=2))
+    phase_means = numpy.median(phase_solutions, axis=3)
+    phase_devs = numpy.std(phase_solutions, axis=3)
+    # phase_devs[1:,1:] = numpy.subtract( \
+    #*numpy.percentile(phase_solutions,[75,25],axis=2))
+
+    if save_to_disk[0]:
+
+        save_to_hdf5(save_to_disk[1],'amp_means', amp_means, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1],'amp_devs', amp_devs, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1],'phase_means', phase_means, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1],'phase_devs', phase_devs, solution_index,sigma_offsets,peak_fluxes)
+
+    return [amp_means, amp_devs], [phase_means, phase_devs]
 
 def table_setup(size_x, size_y):
     table = numpy.zeros((size_x, size_y))
@@ -97,6 +126,24 @@ def position_finder(red_tiles, xy_positions):
         y_coordinates[i] = xy_positions[tile_index[0], 2]
     return x_coordinates, y_coordinates
 
+def save_to_hdf5(pathfolder,fname, savedata, axes1, axes2, axes3):
+    """
+
+    :type pathfolder: string containing the path of output destination
+    """
+    # Check whether output folder is present
+    if not os.path.exists(pathfolder):
+        print ""
+        print "!!!Warning: Creating output folder in working directory!!!"
+        os.makedirs(pathfolder)
+
+    datafile = h5py.File(pathfolder+fname+'.h5','w')
+    datafile['data'] = savedata
+    datafile['axes1'] = axes1
+    datafile['axes2'] = axes2
+    datafile['axes3'] = axes3
+    datafile.close()
+    return
 
 def save_to_text(version, amp_data, phase_data, noisy, direction):
     # Check whether output folder is present
