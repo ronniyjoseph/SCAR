@@ -91,23 +91,22 @@ def FourD_solution_averager(amp_solutions, phase_solutions, red_groups,
 
 
     # calculate averages and standard deviations
-    amp_means = numpy.median(amp_solutions, axis=3)
-    amp_devs = numpy.std(amp_solutions, axis=3)
+    amp_accuracy = numpy.median(amp_solutions-1, axis=3)
+    amp_precision = numpy.std(amp_solutions, axis=3)
     # amp_devs[1:,1:] = numpy.subtract( \
     #	*numpy.percentile(amp_solutions,[75,25],axis=2))
-    phase_means = numpy.median(phase_solutions, axis=3)
-    phase_devs = numpy.std(phase_solutions, axis=3)
+    phase_accuracy = numpy.median(phase_solutions, axis=3)
+    phase_precision = numpy.std(phase_solutions, axis=3)
     # phase_devs[1:,1:] = numpy.subtract( \
     #*numpy.percentile(phase_solutions,[75,25],axis=2))
 
     if save_to_disk[0]:
+        save_to_hdf5(save_to_disk[1],'amp_means', amp_accuracy, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1],'amp_devs', amp_precision, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1],'phase_means', phase_accuracy, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1],'phase_devs', phase_precision, solution_index,sigma_offsets,peak_fluxes)
 
-        save_to_hdf5(save_to_disk[1],'amp_means', amp_means, solution_index,sigma_offsets,peak_fluxes)
-        save_to_hdf5(save_to_disk[1],'amp_devs', amp_devs, solution_index,sigma_offsets,peak_fluxes)
-        save_to_hdf5(save_to_disk[1],'phase_means', phase_means, solution_index,sigma_offsets,peak_fluxes)
-        save_to_hdf5(save_to_disk[1],'phase_devs', phase_devs, solution_index,sigma_offsets,peak_fluxes)
-
-    return [amp_means, amp_devs], [phase_means, phase_devs]
+    return [amp_accuracy, amp_precision], [phase_accuracy, phase_precision]
 
 def table_setup(size_x, size_y):
     table = numpy.zeros((size_x, size_y))

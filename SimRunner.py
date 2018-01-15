@@ -536,7 +536,7 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
                 if array_success:
                     source_l = numpy.random.uniform(-1,1,1)
                     source_m = numpy.random.uniform(-1,1,1)
-                    sky_model = ['point_and_background',S_peak,source_l,source_m]
+                    sky_model = ['point_and_background',S_peak,source_l[0],source_m[0]]
                     obs_visibilities, ideal_visibilities, model_visibilities = \
                         CreateVisibilities(red_baseline_table, frequency_range,
                                            noise_param, sky_model, beam_param, seed)

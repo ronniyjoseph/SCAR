@@ -10,9 +10,9 @@ def LogcalMatrixPopulator(uv_positions, xyz_positions):
     red_tiles = unique_value_finder(uv_positions[:, 0:2], 'values')
     # it's not really finding unique antennas, it just finds unique values
     red_groups = unique_value_finder(uv_positions[:, 7], 'values')
-    print "There are", len(red_tiles), "redundant tiles"
-    print ""
-    print "Creating the equation matrix"
+   # print "There are", len(red_tiles), "redundant tiles"
+   # print ""
+   # print "Creating the equation matrix"
     # create am empty matrix (#measurements)x(#tiles + #redundant groups)
     amp_matrix = numpy.zeros((len(uv_positions), len(red_tiles) + len(red_groups)))
     phase_matrix = numpy.zeros((len(uv_positions), len(red_tiles) + len(red_groups)))

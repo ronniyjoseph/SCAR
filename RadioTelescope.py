@@ -221,8 +221,8 @@ def redundant_baseline_finder(uv_positions, baseline_direction):
 
         uv_positions = uv_positions[unselected_indices]
 
-    print "There are", k, "redundant baselines in this array."
-    print "There are", group_counter, "redundant groups in this array"
+    #print "There are", k, "redundant baselines in this array."
+    #print "There are", group_counter, "redundant groups in this array"
 
     # find the filled entries
     non_zero_indices = numpy.where(baseline_selection[:, 0, 0] != 0)
