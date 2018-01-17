@@ -24,7 +24,7 @@ from RedundantCalibration import LogcalMatrixPopulator
 
 
 def Moving_Source(telescope_param, offset, calibration_channel, noise_param, direction,
-                  sky_steps, sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
+                  sky_steps,input_iterations, sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
     starttime = time.time()
 
     if telescope_param[0] == 'square' \
@@ -66,7 +66,7 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
         red_baseline_table, xyz_positions)
 
     #Double check input parameters whether they suit the requirements if not change them.
-    iterations, sky_steps, type_sim = check_noise_and_sky_parameters(noise_param, sky_param, sky_steps)
+    iterations, sky_steps, type_sim = check_noise_and_sky_parameters(noise_param, sky_param, sky_steps,input_iterations)
 
     # Create empty 3D table to store calibration results as a function
     # of realization and sky positions
@@ -425,18 +425,18 @@ def MuChSource_Mover(n_channels, telescope_param, calibration_channel, noise_par
 
 
 
-def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps):
+def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps,input_iterations):
     type_sim = ""
 
     if noise_param[0]:
-        iterations = 1001
+        sim_iterations = input_iterations
         type_sim += " noisy "
     else:
-        iterations = 1
+        sim_iterations = 1
         type_sim += " ideal "
 
     if sky_param[0] == 'background' or sky_param[0] == 'point_and_background':
-        iterations = 1001
+        simiterations = input_iterations
 
     if sky_param[0] == "point" or sky_param[0] == 'point_and_background':
         if sky_param[0] == "point":
@@ -451,7 +451,7 @@ def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps):
         sys.exit(sky_param[0] + " is an invalid sky model parameter. Please " + \
                  "choose from 'point' or 'background' or 'point_and_background'")
 
-    return iterations, sky_steps, type_sim
+    return sim_iterations, sky_steps, type_sim
 
 
 
