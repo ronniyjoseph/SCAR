@@ -210,12 +210,15 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
         file.write("Telescope Parameters: " + str(telescope_param) + "\n")
         file.write("Telescope Offsets: " + str(offset) + "\n")
         file.write("Calibration Channel: " + str(calibration_channel / 1e6) + "MHz \n")
+        file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
+        file.write("Iterations: " + str(iterations) + "\n")
         file.write("Noise Parameters: " + str(noise_param) + "\n")
         file.write("Source Direction: " + direction + "\n")
         file.write("Sky Steps: " + str(sky_steps) + "\n")
         file.write("Sky Model: " + str(sky_param) + "\n")
         file.write("Iterations: " + str(iterations) + "\n")
         file.write("Beam Parameters: " + str(beam_param) + "\n")
+        file.write("Save Parameters: " + str(save_to_disk) + "\n")
         file.close()
 
     if hist_movie[0]:

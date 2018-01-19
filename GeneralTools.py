@@ -61,14 +61,22 @@ def solution_averager(amp_solutions, phase_solutions, red_tiles, \
 
     if iterations > 1:
         # calculate averages and standard deviations
-        amp_means[1:, 1:] = numpy.median(amp_solutions, axis=2)
-        amp_devs[1:, 1:] = numpy.std(amp_solutions, axis=2)
-        # amp_devs[1:,1:] = numpy.subtract( \
-        #	*numpy.percentile(amp_solutions,[75,25],axis=2))
-        phase_means[1:, 1:] = numpy.median(phase_solutions, axis=2)
-        phase_devs[1:, 1:] = numpy.std(phase_solutions, axis=2)
-    # phase_devs[1:,1:] = numpy.subtract( \
-    #	*numpy.percentile(phase_solutions,[75,25],axis=2))
+
+        if save_to_disk[2] == 'median':
+            amp_means[1:, 1:] = numpy.median(amp_solutions, axis=2)
+            phase_means[1:, 1:] = numpy.median(phase_solutions, axis=2)
+        else:
+            sys.exit("save_to_disk[2] parameter should be 'median'")
+
+        if save_to_disk[3] == 'std':
+            amp_devs[1:, 1:] = numpy.std(amp_solutions, axis=2)
+            phase_devs[1:, 1:] = numpy.std(phase_solutions, axis=2)
+        elif save_to_disk[3] =='iqr':
+            amp_devs[1:,1:] = numpy.subtract(*numpy.percentile(amp_solutions,[75,25],axis=2))
+            phase_devs[1:,1:] = numpy.subtract(*numpy.percentile(phase_solutions,[75,25],axis=2))
+        else:
+            sys.exit("save_to_disk[3] parameter should be 'std' or 'iqr'")
+
     else:
         amp_means[1:, 1:] = amp_solutions[:, :, 0]
         amp_devs[1:, 1:] = 0
