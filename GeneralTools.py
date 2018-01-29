@@ -71,9 +71,9 @@ def solution_averager(amp_solutions, phase_solutions, red_tiles, \
         if save_to_disk[3] == 'std':
             amp_devs[1:, 1:] = numpy.std(amp_solutions, axis=2)
             phase_devs[1:, 1:] = numpy.std(phase_solutions, axis=2)
-        elif save_to_disk[3] =='iqr':
-            amp_devs[1:,1:] = numpy.subtract(*numpy.percentile(amp_solutions,[75,25],axis=2))
-            phase_devs[1:,1:] = numpy.subtract(*numpy.percentile(phase_solutions,[75,25],axis=2))
+        elif save_to_disk[3] == 'iqr':
+            amp_devs[1:, 1:] = numpy.subtract(*numpy.percentile(amp_solutions, [75, 25], axis=2))
+            phase_devs[1:, 1:] = numpy.subtract(*numpy.percentile(phase_solutions, [75, 25], axis=2))
         else:
             sys.exit("save_to_disk[3] parameter should be 'std' or 'iqr'")
 
@@ -84,37 +84,36 @@ def solution_averager(amp_solutions, phase_solutions, red_tiles, \
         phase_devs[1:, 1:] = 0
 
     if save_to_disk[0]:
-        save_to_text(save_to_disk[1], [amp_means, amp_devs], \
+        save_to_text(save_to_disk, [amp_means, amp_devs], \
                      [phase_means, phase_devs], noise_param[0], direction=direction)
     return [amp_means, amp_devs], [phase_means, phase_devs]
 
-def FourD_solution_averager(amp_solutions, phase_solutions, red_groups,
-                         red_tiles, peak_fluxes, sigma_offsets, save_to_disk):
 
+def FourD_solution_averager(amp_solutions, phase_solutions, red_groups,
+                            red_tiles, peak_fluxes, sigma_offsets, save_to_disk):
     iterations = len(amp_solutions[0, 0, 0, :])
 
     # Set the antenna numbers
     solution_index = numpy.concatenate((red_tiles, red_groups))
 
-
-
     # calculate averages and standard deviations
-    amp_accuracy = numpy.median(amp_solutions-1, axis=3)
+    amp_accuracy = numpy.median(amp_solutions - 1, axis=3)
     amp_precision = numpy.std(amp_solutions, axis=3)
     # amp_devs[1:,1:] = numpy.subtract( \
     #	*numpy.percentile(amp_solutions,[75,25],axis=2))
     phase_accuracy = numpy.median(phase_solutions, axis=3)
     phase_precision = numpy.std(phase_solutions, axis=3)
     # phase_devs[1:,1:] = numpy.subtract( \
-    #*numpy.percentile(phase_solutions,[75,25],axis=2))
+    # *numpy.percentile(phase_solutions,[75,25],axis=2))
 
     if save_to_disk[0]:
-        save_to_hdf5(save_to_disk[1],'amp_means', amp_accuracy, solution_index,sigma_offsets,peak_fluxes)
-        save_to_hdf5(save_to_disk[1],'amp_devs', amp_precision, solution_index,sigma_offsets,peak_fluxes)
-        save_to_hdf5(save_to_disk[1],'phase_means', phase_accuracy, solution_index,sigma_offsets,peak_fluxes)
-        save_to_hdf5(save_to_disk[1],'phase_devs', phase_precision, solution_index,sigma_offsets,peak_fluxes)
+        save_to_hdf5(save_to_disk[1], 'amp_means', amp_accuracy, solution_index, sigma_offsets, peak_fluxes)
+        save_to_hdf5(save_to_disk[1], 'amp_devs', amp_precision, solution_index, sigma_offsets, peak_fluxes)
+        save_to_hdf5(save_to_disk[1], 'phase_means', phase_accuracy, solution_index, sigma_offsets, peak_fluxes)
+        save_to_hdf5(save_to_disk[1], 'phase_devs', phase_precision, solution_index, sigma_offsets, peak_fluxes)
 
     return [amp_accuracy, amp_precision], [phase_accuracy, phase_precision]
+
 
 def table_setup(size_x, size_y):
     table = numpy.zeros((size_x, size_y))
@@ -133,27 +132,31 @@ def position_finder(red_tiles, xy_positions):
         y_coordinates[i] = xy_positions[tile_index[0], 2]
     return x_coordinates, y_coordinates
 
-def save_to_hdf5(pathfolder,fname, savedata, axes1, axes2, axes3):
-    """
 
-    :type pathfolder: string containing the path of output destination
+def save_to_hdf5(pathfolder, fname, savedata, axesdata, axeslabels):
     """
+	:type pathfolder: string containing the path of output destination
+	"""
     # Check whether output folder is present
     if not os.path.exists(pathfolder):
         print ""
         print "!!!Warning: Creating output folder in working directory!!!"
         os.makedirs(pathfolder)
-
-    datafile = h5py.File(pathfolder+fname+'.h5','w')
+    if len(axesdata) != len(axeslabels):
+        sys.exit("Data Axes length (" + str(len(axesdata)) + ") does not equal Axes Label length (" + str(
+            len(axeslabels)) + ")")
+    datafile = h5py.File(pathfolder + fname + '.h5', 'w')
     datafile['data'] = savedata
-    datafile['axes1'] = axes1
-    datafile['axes2'] = axes2
-    datafile['axes3'] = axes3
+    for index in range(len(axesdata)):
+        datafile[axeslabels[index]] = axesdata[index]
     datafile.close()
     return
 
-def save_to_text(version, amp_data, phase_data, noisy, direction):
+
+def save_to_text(save_params, amp_data, phase_data, noisy, direction):
     # Check whether output folder is present
+    version = save_params[1]
+
     if not os.path.exists(version):
         print ""
         print "!!!Warning: Creating output folder in working directory!!!"

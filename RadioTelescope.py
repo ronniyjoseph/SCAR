@@ -116,9 +116,10 @@ def xyz_position_creator(shape):
     return xyz_coordinates
 
 
-def baseline_converter(xy_positions, gain_table, frequency_channels):
-    print ""
-    print "Converting xyz to uvw-coordinates"
+def baseline_converter(xy_positions, gain_table, frequency_channels,verbose=True):
+    if verbose:
+        print ""
+        print "Converting xyz to uvw-coordinates"
 
     # calculate the wavelengths of the adjecent channels
     wavelength_range = scipy.constants.c / frequency_channels
@@ -132,9 +133,10 @@ def baseline_converter(xy_positions, gain_table, frequency_channels):
     # baselines x Antenna1, Antenna2, u, v, w, gain product, phase sum x channels
     uv_positions = numpy.zeros((number_of_baselines, 7, n_channels))
 
-    print ""
-    print "Number of antenna =", number_of_antenna
-    print "Total number of baselines =", number_of_baselines
+    if verbose:
+        print ""
+        print "Number of antenna =", number_of_antenna
+        print "Total number of baselines =", number_of_baselines
 
     # arbitrary counter to keep track of the baseline table
     k = 0
@@ -167,7 +169,7 @@ def baseline_converter(xy_positions, gain_table, frequency_channels):
     return uv_positions
 
 
-def redundant_baseline_finder(uv_positions, baseline_direction):
+def redundant_baseline_finder(uv_positions, baseline_direction,verbose=False):
     """
 	"""
 
@@ -221,8 +223,9 @@ def redundant_baseline_finder(uv_positions, baseline_direction):
 
         uv_positions = uv_positions[unselected_indices]
 
-    #print "There are", k, "redundant baselines in this array."
-    #print "There are", group_counter, "redundant groups in this array"
+    if verbose:
+        print "There are", k, "redundant baselines in this array."
+        print "There are", group_counter, "redundant groups in this array"
 
     # find the filled entries
     non_zero_indices = numpy.where(baseline_selection[:, 0, 0] != 0)

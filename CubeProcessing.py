@@ -3,17 +3,38 @@ import h5py
 import os
 import subprocess
 
+"""
+This module contains all functions required to process the full solutions hdf5 files
+*solution histogram plotter makes videos of the cube as the sources moves along the sky
+*Solution averager calculates the mean/median and std/iqr
 
-def solution_histogram_plotter(amp_solutions, phase_solutions, output_folder):
+"""
+
+def solution_histogram_plotter(output_folder,solution_type):
+
+    #General plot formatting tools
+    labelfontsize = 14
+    amplitude_plotscale = 'log'
+    phase_plotscale = 'linear'
+
+
     if not os.path.exists(output_folder+"/temp"):
         print ""
-        print "!!!Warning: Creating temporary output folder in working directory!!!"
+        print "Creating temporary output folder in working directory"
+
         os.makedirs(output_folder)
+
+    print ""
+    print "loading data"
+
+
+    solution_set = cube_loader(output_folder,solution_type)
+
+
 
     print ""
     print "Creating histogram video of the solutions"
 
-    labelfontsize = 14
 
     indices = numpy.where(abs(noisy_amp_info_l[0][:, 0]) > 5e7)[0]
 
@@ -178,3 +199,65 @@ def solution_histogram_plotter(amp_solutions, phase_solutions, output_folder):
     subprocess.call("rm -r temp", shell=True)
 
     os.chdir(execution_path)
+
+
+def cube_loader(output_folder,solution_type):
+    if solution_type == "ideal":
+        amp_solutions = h5py.File(output_folder+files[plotnumber],'r')
+
+    elif solution_type == "noisy":
+
+    elif solution_type == "both":
+
+    else:
+        sys.exit("solution_type: please select 'ideal','noisy' or 'both', Goodbye.")
+
+def solution_averager(amp_solutions, phase_solutions, red_tiles, \
+                      red_groups, sky_coords, save_to_disk, direction, noise_param):
+    iterations = len(amp_solutions[0, 0, :])
+    # Create empty tables, to save the results for each sky step
+    amp_means = table_setup(len(red_tiles) + len(red_groups) + 1, len(sky_coords) + 1)
+    amp_devs = table_setup(len(red_tiles) + len(red_groups) + 1, len(sky_coords) + 1)
+
+    phase_means = table_setup(len(red_tiles) + len(red_groups) + 1, len(sky_coords) + 1)
+    phase_devs = table_setup(len(red_tiles) + len(red_groups) + 1, len(sky_coords) + 1)
+    # Set the sky steps
+    amp_means[0, 1:] = sky_coords
+    amp_devs[0, 1:] = sky_coords
+    phase_means[0, 1:] = sky_coords
+    phase_devs[0, 1:] = sky_coords
+
+    # Set the antenna numbers
+    amp_means[1:, 0] = numpy.concatenate((red_tiles, red_groups))
+    amp_devs[1:, 0] = numpy.concatenate((red_tiles, red_groups))
+    phase_means[1:, 0] = numpy.concatenate((red_tiles, red_groups))
+    phase_devs[1:, 0] = numpy.concatenate((red_tiles, red_groups))
+
+    if iterations > 1:
+        # calculate averages and standard deviations
+
+        if save_to_disk[2] == 'median':
+            amp_means[1:, 1:] = numpy.median(amp_solutions, axis=2)
+            phase_means[1:, 1:] = numpy.median(phase_solutions, axis=2)
+        else:
+            sys.exit("save_to_disk[2] parameter should be 'median'")
+
+        if save_to_disk[3] == 'std':
+            amp_devs[1:, 1:] = numpy.std(amp_solutions, axis=2)
+            phase_devs[1:, 1:] = numpy.std(phase_solutions, axis=2)
+        elif save_to_disk[3] == 'iqr':
+            amp_devs[1:, 1:] = numpy.subtract(*numpy.percentile(amp_solutions, [75, 25], axis=2))
+            phase_devs[1:, 1:] = numpy.subtract(*numpy.percentile(phase_solutions, [75, 25], axis=2))
+        else:
+            sys.exit("save_to_disk[3] parameter should be 'std' or 'iqr'")
+
+    else:
+        amp_means[1:, 1:] = amp_solutions[:, :, 0]
+        amp_devs[1:, 1:] = 0
+        phase_means[1:, 1:] = phase_solutions[:, :, 0]
+        phase_devs[1:, 1:] = 0
+
+    if save_to_disk[0]:
+        save_to_text(save_to_disk, [amp_means, amp_devs], \
+                     [phase_means, phase_devs], noise_param[0], direction=direction)
+    return [amp_means, amp_devs], [phase_means, phase_devs]
