@@ -464,8 +464,8 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
     beam_param, calibration_scheme,peakflux_range,offset_range, iterations, save_to_disk):
     starttime = time.time()
 
-    peakfluxes = numpy.logspace(peakflux_range[0],peakflux_range[1],peakflux_range[2])
-    offsets = numpy.logspace(offset_range[0], offset_range[1], offset_range[2])
+    peakfluxes = numpy.logspace(numpy.log10(peakflux_range[0]),numpy.log10(peakflux_range[1]),peakflux_range[2])
+    offsets = numpy.logspace(numpy.log10(offset_range[0]), numpy.log10(offset_range[1]), offset_range[2])
 
     random_seeds = numpy.arange(iterations)
 
@@ -510,7 +510,8 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
         if numpy.mod(iteration, 100) == 0:
             print "Realization", iteration
         sigma_counter = 0
-        seed =  random_seeds[iteration_counter]
+        seed = random_seeds[iteration_counter]
+
         for sigma in offsets:
             array_counter = 0
             while True:
@@ -587,7 +588,7 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
 
     parameters = numpy.concatenate((red_tiles,red_groups))
     axesdata = [parameters,offsets,peakfluxes,random_seeds]
-    axeslabels=['parameters','positions_uncertainty','peak_flux','iteration']
+    axeslabels=['parameters','positions_uncertainty', 'peak_flux','iteration']
     save_to_hdf5(save_to_disk[1],"ideal_amp_solutions",ideal_amp_solutions,
     axesdata,axeslabels)
     save_to_hdf5(save_to_disk[1],"ideal_phase_solutions",ideal_phase_solutions,

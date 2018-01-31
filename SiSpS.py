@@ -1,6 +1,5 @@
 import argparse
-import numpy
-from SCAR.SimRunner import max_source_and_position_offset_changer
+from SimRunner import max_source_and_position_offset_changer
 
 ########################################################################
 # Calls the simulation which varies position offsets and peak fluxes   #
@@ -13,8 +12,8 @@ def main(n_channels, output_folder, source_strength):
     noise_param = [False, 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
     iterations = 1000
-    peakflux_range = [1,200,10]
-    offset_range = [1e-3,1e-2,10]
+    peakflux_range = [1,200,10]    #Specify in Jy
+    offset_range = [1e-3,1e-2,10]  #Specify in m
     save_to_disk = [True, output_folder]
     telescope_param = ["linear", 10, 5]
     calibration_scheme = 'logcal'
@@ -32,7 +31,7 @@ if __name__ == "__main__":
                         default=0)
     parser.add_argument('-pointJy', action='store', default=200.,
                         type=float)
-    parser.add_argument('-path', action='store', default="../simulation_output/SiSpS_HDF5_Test/",
+    parser.add_argument('-path', action='store', default="../../simulation_output/SiSpS_HDF5_large/",
                         type=str)
 
     args = parser.parse_args()

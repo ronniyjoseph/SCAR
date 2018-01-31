@@ -1,9 +1,7 @@
 import argparse
-import numpy
-from SCAR.SimRunner import MuChSource_Mover
-from SCAR.SimRunner import Moving_Source
-from SCAR.RadioTelescope import xyz_position_creator
-from SCAR.RadioTelescope import antenna_table_loader
+from SimRunner import MuChSource_Mover
+from SimRunner import Moving_Source
+
 ########################################################################
 #   Calibrate Redundant Arrays on Moving Point Sources                 3
 ########################################################################
