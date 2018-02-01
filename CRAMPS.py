@@ -30,7 +30,8 @@ def main(n_channels, output_folder, source_strength):
     save_to_disk = [True, output_folder, 'median', 'iqr']
     telescope_param = ["linear", 10, 5]
     hist_movie = [make_histogram_movie, output_folder]
-    calibration_scheme = 'logcal'  # 'logcal','lincal','full'
+    calibration_scheme = 'full'  # 'logcal','lincal','full'
+    offset = [False, 3,'x', 0.1]
 
     # telescope_param = ["hex",14]
     # telescope_param = ["doublehex",14,14,100,100]
@@ -47,7 +48,6 @@ def main(n_channels, output_folder, source_strength):
     # x2, y2 = numpy.mean(real_hex2[:,1]),numpy.mean(real_hex2[:,2])
     # telescope_param = ["doublehex",14,x1,y1,x2,y2]
 
-    offset = [False]
     if n_channels == 0:
         Moving_Source(telescope_param, offset, calibration_channel, noise_param, 'l',
                       sky_steps, iterations, sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
                         type=int)
     parser.add_argument('-pointJy', action='store', default=200.,
                         type=float)
-    parser.add_argument('-path', action='store', default="../simulation_output/SCAR_HDF5_test/",
+    parser.add_argument('-path', action='store', default="../../simulation_output/SCAR_HDF5_test/",
                         type=str)
 
     args = parser.parse_args()

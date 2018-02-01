@@ -8,16 +8,16 @@ from SimRunner import max_source_and_position_offset_changer
 def main(n_channels, output_folder, source_strength):
     calibration_channel = 150e6
     channel_size = 40e3
-    sky_param = ['point_and_background', source_strength]
-    noise_param = [False, 20e3, 40e3, 120]
+    sky_param = ['point', "random"]
+    noise_param = ['SEFD', 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
     iterations = 1000
-    peakflux_range = [1,200,10]    #Specify in Jy
-    offset_range = [1e-3,1e-2,10]  #Specify in m
+    peakflux_range = [1, 200, 20]    #Specify in Jy
+    offset_range = [1e-4, 1e-2,20]  #Specify in m
     save_to_disk = [True, output_folder]
     telescope_param = ["linear", 10, 5]
     calibration_scheme = 'logcal'
-    max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param,
+    max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param,sky_param,
                                            beam_param, calibration_scheme, peakflux_range, offset_range, iterations,
                                            save_to_disk)
 

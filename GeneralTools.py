@@ -3,6 +3,7 @@ import h5py
 import os
 import subprocess
 from scipy import interpolate
+import sys
 import matplotlib
 from matplotlib import pyplot
 from matplotlib import rcParams
@@ -142,9 +143,11 @@ def save_to_hdf5(pathfolder, fname, savedata, axesdata, axeslabels):
         print ""
         print "!!!Warning: Creating output folder in working directory!!!"
         os.makedirs(pathfolder)
+
     if len(axesdata) != len(axeslabels):
         sys.exit("Data Axes length (" + str(len(axesdata)) + ") does not equal Axes Label length (" + str(
             len(axeslabels)) + ")")
+
     datafile = h5py.File(pathfolder + fname + '.h5', 'w')
     datafile['data'] = savedata
     for index in range(len(axesdata)):

@@ -3,6 +3,7 @@ import h5py
 import os
 import subprocess
 import sys
+from GeneralTools import table_setup
 from matplotlib import pyplot
 from matplotlib import rcParams
 from matplotlib import rc
@@ -18,10 +19,16 @@ This module contains all functions required to process the full solutions hdf5 f
 """
 
 
-def cube_processor(output_path,simulation_run,simulation_type,histogram_plotset,solution_averaging):
+def cube_processor(output_path,simulation_run,simulation_type,histogram_plotset,averaging_param):
     if simulation_type == "CRAMPS":
-        if histogram_plotset:
+        if histogram_plotset[0]:
             CRAMPS_histogram_inspection(output_path + simulation_run, histogram_plotset)
+        elif averaging_param[0]:
+            solution_averager(output_path + simulation_run, averaging_param, "ideal", "amp")
+            solution_averager(output_path + simulation_run, averaging_param, "ideal", "phase")
+
+            solution_averager(output_path + simulation_run, averaging_param, "noisy", "amp")
+            solution_averager(output_path + simulation_run, averaging_param, "noisy", "phase")
         else:
             sys.exit("blaah")
     elif simulation_type == "SiSpS":
@@ -32,6 +39,7 @@ def cube_processor(output_path,simulation_run,simulation_type,histogram_plotset,
     else:
         sys.exit("Simulation type unknown: Please choose 'CRAMPS' or 'SiSpS'")
     return
+
 
 def SiSps_histogram_inspection(output_folder, solution_type):
     if solution_type == "ideal":
@@ -101,6 +109,7 @@ def create_solution_histogram_tile(output_folder, solution_type, solution_parame
         user_choice = raw_input("Your choice of the day :")
 
         if user_choice == "q":
+            subprocess.call("clear", shell=True)
             break
         else:
             user_quantity = int(user_choice)
@@ -120,6 +129,8 @@ def create_solution_histogram_tile(output_folder, solution_type, solution_parame
 
             fig1.suptitle(r'' + str(parameters[quantity_index]) + 'solutions', y=1.001)
             pyplot.show()
+        loop_number += 1
+        subprocess.call("clear", shell=True)
 
     return
 
@@ -132,8 +143,8 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     number_bins = 100
     stepsize = 2
 
-    rows = numpy.arange(0,len(position_offsets),2)
-    cols = numpy.arange(0,len(peak_fluxes),2)
+    rows = numpy.arange(0,len(position_offsets),1)
+    cols = numpy.arange(0,len(peak_fluxes),1)
     nrow = len(rows)
     ncol = len(cols)
     plotcounter = 1
@@ -153,7 +164,7 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
             subplot.text(0.95, 0.01, r'$\sigma =%s$' % (str(numpy.log10(position_offsets[offset_index]))),
                          verticalalignment='bottom', horizontalalignment='right',
                          transform=subplot.transAxes, fontsize=15)
-            subplot.text(0.95, 0.21, r'$S =  %s Jy$' % (str(numpy.log10(peak_fluxes[flux_index]))),
+            subplot.text(0.95, 0.21, r'$S =  %s Jy$' % (str(peak_fluxes[flux_index])),
                          verticalalignment='bottom', horizontalalignment='right',
                          transform=subplot.transAxes, fontsize=15)
             minimum = numpy.min(solution_data[0, offset_index, flux_index, :])
@@ -268,6 +279,8 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
     return
 
 def CRAMPS_cube_loader(output_folder,solution_type,solution_parameter):
+
+    print "loading "+  output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5"
     solution_cube = h5py.File(output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
@@ -335,6 +348,46 @@ def solution_histogram_plotter(fig1, number_visibilities, number_tiles, solution
             visibilityplot += 1
 
     return fig1
+
+
+def solution_averager(output_folder, save_to_disk, solution_type, solution_parameter):
+    solution_data, solution_quantity, l, iterations = CRAMPS_cube_loader(output_folder, solution_type, solution_parameter)
+
+    number_iterations = len(iterations)
+    # Create empty tables, to save the results for each sky step
+    data_means = table_setup(len(solution_quantity) + 1, len(l) + 1)
+    data_devs = table_setup(len(solution_quantity) + 1, len(l) + 1)
+
+    #Set the sky steps
+    data_means[0, 1:] = l
+    data_devs[0, 1:] = l
+
+    # Set the antenna numbers
+    data_means[1:, 0] = solution_quantity
+    data_devs[1:, 0] = solution_quantity
+
+    if number_iterations > 1:
+        # calculate averages and standard deviations
+        if save_to_disk[1] == 'median':
+            data_means[1:, 1:] = numpy.median(solution_data, axis=2)
+        else:
+            sys.exit("save_to_disk[2] parameter should be 'median'")
+
+        if save_to_disk[2] == 'std':
+            data_devs[1:, 1:] = numpy.std(solution_data, axis=2)
+        elif save_to_disk[2] == 'iqr':
+            data_devs[1:, 1:] = numpy.subtract(*numpy.percentile(solution_data, [75, 25], axis=2))
+        else:
+            sys.exit("save_to_disk[3] parameter should be 'std' or 'iqr'")
+
+    else:
+        data_means[1:, 1:] = solution_data[:, :, 0]
+        data_devs[1:, 1:] = 0
+
+    numpy.savetxt(output_folder +"/"+solution_type+"_"+solution_parameter+"_"+save_to_disk[1]+".txt", data_means)
+    numpy.savetxt(output_folder +"/"+solution_type+"_"+solution_parameter+"_"+save_to_disk[2]+".txt", data_devs)
+    return
+
 
 #
 # def solution_averager(amp_solutions, phase_solutions, red_tiles, \

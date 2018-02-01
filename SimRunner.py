@@ -21,13 +21,12 @@ from SkyModel import CreateVisibilities
 from RedundantCalibration import Redundant_Calibrator
 from RedundantCalibration import LogcalMatrixPopulator
 
-
 """Simulate Calibration with Array Redundancy
 """
 
 
 def Moving_Source(telescope_param, offset, calibration_channel, noise_param, direction,
-                  sky_steps,input_iterations, sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
+                  sky_steps, input_iterations, sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
     starttime = time.time()
 
     if telescope_param[0] == 'square' \
@@ -61,15 +60,16 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
     # ~ baseline_table = baseline_table[intra_hex_index,:]
 
     print ""
-
+    print "Running Calibrating Redundant Arrays on Moving Point Sources"
     # Find the redundant tiles
     red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
     # Calculate the solving matrices (only needs to be once)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
         red_baseline_table, xyz_positions)
 
-    #Double check input parameters whether they suit the requirements if not change them.
-    iterations, sky_steps, type_sim = check_noise_and_sky_parameters(noise_param, sky_param, sky_steps,input_iterations)
+    # Double check input parameters whether they suit the requirements if not change them.
+    iterations, sky_steps, type_sim = check_noise_and_sky_parameters(noise_param, sky_param, sky_steps,
+                                                                     input_iterations)
 
     # Create empty 3D table to store calibration results as a function
     # of realization and sky positions
@@ -201,24 +201,26 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
                 ideal_visibilities -= point_ideal_visibilities
                 model_visibilities -= point_model_visibilities
 
-    parameters = numpy.concatenate((red_tiles,red_groups))
-    axesdata = [parameters,sky_coords,random_seeds]
-    axeslabels=['parameters','l_coordinates','iteration']
-    save_to_hdf5(save_to_disk[1],"ideal_amp_solutions",ideal_amp_solutions,
-    axesdata,axeslabels)
-    save_to_hdf5(save_to_disk[1],"ideal_phase_solutions",ideal_phase_solutions,
-    axesdata,axeslabels)
+    parameters = numpy.concatenate((red_tiles, red_groups))
+    axesdata = [parameters, sky_coords, random_seeds]
+    axeslabels = ['parameters', 'l_coordinates', 'iteration']
 
-    save_to_hdf5(save_to_disk[1],"noisy_amp_solutions",noisy_amp_solutions,
-    axesdata,axeslabels)
-    save_to_hdf5(save_to_disk[1],"noisy_phase_solutions",noisy_phase_solutions,
-    axesdata,axeslabels)
 
-    #Calculate run time
+    save_to_hdf5(save_to_disk[1], "ideal_amp_solutions", ideal_amp_solutions,
+                 axesdata, axeslabels)
+    save_to_hdf5(save_to_disk[1], "ideal_phase_solutions", ideal_phase_solutions,
+                 axesdata, axeslabels)
+
+    save_to_hdf5(save_to_disk[1], "noisy_amp_solutions", noisy_amp_solutions,
+                 axesdata, axeslabels)
+    save_to_hdf5(save_to_disk[1], "noisy_phase_solutions", noisy_phase_solutions,
+                 axesdata, axeslabels)
+
+    # Calculate run time
     endtime = time.time()
     runtime = endtime - starttime
 
-    #Save input parameters to log file
+    # Save input parameters to log file
     file = open(save_to_disk[1] + "simulation_parameter.log", "w")
     file.write("Standard Redundant Calibration Simulation" + "\n")
     file.write("Telescope Parameters: " + str(telescope_param) + "\n")
@@ -233,7 +235,7 @@ def Moving_Source(telescope_param, offset, calibration_channel, noise_param, dir
     file.write("Iterations: " + str(iterations) + "\n")
     file.write("Beam Parameters: " + str(beam_param) + "\n")
     file.write("Save Parameters: " + str(save_to_disk) + "\n")
-    file.write("Runtime: "+ str(runtime) + "\n")
+    file.write("Runtime: " + str(runtime) + "\n")
     file.close()
 
     print "Runtime", runtime
@@ -428,8 +430,7 @@ def MuChSource_Mover(n_channels, telescope_param, calibration_channel, noise_par
     return
 
 
-
-def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps,input_iterations):
+def check_noise_and_sky_parameters(noise_param, sky_param, sky_steps, input_iterations):
     type_sim = ""
 
     if noise_param[0]:
@@ -458,13 +459,12 @@ def check_noise_and_sky_parameters(noise_param,sky_param,sky_steps,input_iterati
     return sim_iterations, sky_steps, type_sim
 
 
-
-
-def max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param,
-    beam_param, calibration_scheme,peakflux_range,offset_range, iterations, save_to_disk):
+def max_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param, sky_param,
+                                           beam_param, calibration_scheme, peakflux_range, offset_range, iterations,
+                                           save_to_disk):
     starttime = time.time()
 
-    peakfluxes = numpy.logspace(numpy.log10(peakflux_range[0]),numpy.log10(peakflux_range[1]),peakflux_range[2])
+    peakfluxes = numpy.logspace(numpy.log10(peakflux_range[0]), numpy.log10(peakflux_range[1]), peakflux_range[2])
     offsets = numpy.logspace(numpy.log10(offset_range[0]), numpy.log10(offset_range[1]), offset_range[2])
 
     random_seeds = numpy.arange(iterations)
@@ -482,7 +482,7 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
     gain_table = antenna_gain_creator(xyz_positions, frequency_range)
     baseline_table = baseline_converter(xyz_positions, gain_table,
                                         frequency_range)
-    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL',verbose=True)
+    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose=True)
     # Calculate the solving matrices (only needs to be once)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
         red_baseline_table, xyz_positions)
@@ -495,13 +495,13 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
     n_peakfluxes = len(peakfluxes)
     n_offsets = len(offsets)
 
-    noisy_amp_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
+    noisy_amp_solutions = numpy.zeros((n_tiles + n_groups, n_offsets,
                                        n_peakfluxes, iterations))
-    noisy_phase_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
+    noisy_phase_solutions = numpy.zeros((n_tiles + n_groups, n_offsets,
                                          n_peakfluxes, iterations))
-    ideal_amp_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
+    ideal_amp_solutions = numpy.zeros((n_tiles + n_groups, n_offsets,
                                        n_peakfluxes, iterations))
-    ideal_phase_solutions = numpy.zeros((n_tiles + n_groups,n_offsets,
+    ideal_phase_solutions = numpy.zeros((n_tiles + n_groups, n_offsets,
                                          n_peakfluxes, iterations))
 
     random_seeds = numpy.arange(iterations)
@@ -522,7 +522,7 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
                 gain_table[:, 2] += y_offset
 
                 baseline_table = baseline_converter(xyz_positions, gain_table,
-                                                    frequency_range,verbose=False)
+                                                    frequency_range, verbose=False)
                 red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
                 # Calculate the solving matrices (only needs to be once)
                 amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
@@ -540,9 +540,12 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
             S_peak_counter = 0
             for S_peak in peakfluxes:
                 if array_success:
-                    source_l = numpy.random.uniform(-1,1,1)
-                    source_m = numpy.random.uniform(-1,1,1)
-                    sky_model = ['point_and_background',S_peak,source_l[0],source_m[0]]
+                    if sky_param[1] == "random":
+                        source_l = numpy.random.uniform(-1, 1, 1)
+                        source_m = numpy.random.uniform(-1, 1, 1)
+                        sky_model = [sky_param[0], S_peak, source_l, source_m]
+                    else:
+                        sky_model = [sky_param[0], S_peak, source_l, source_m]
                     obs_visibilities, ideal_visibilities, model_visibilities = \
                         CreateVisibilities(red_baseline_table, frequency_range,
                                            noise_param, sky_model, beam_param, seed)
@@ -566,40 +569,40 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
                         amp_matrix, phase_matrix, ideal_visibilities,
                         red_baseline_table, red_tiles, red_groups, calibration_param)
 
-                    noisy_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = noisy_amp_data
-                    noisy_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = noisy_phase_data
-                    ideal_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = ideal_amp_data
-                    ideal_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = ideal_phase_data
+                    noisy_amp_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = noisy_amp_data
+                    noisy_phase_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = noisy_phase_data
+
+                    ideal_amp_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = ideal_amp_data
+                    ideal_phase_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = ideal_phase_data
                 else:
-                    noisy_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
-                    noisy_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
-                    ideal_amp_solutions[:, sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
-                    ideal_phase_solutions[:,  sigma_counter, S_peak_counter,iteration_counter] = numpy.nan
+                    noisy_amp_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = numpy.nan
+                    noisy_phase_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = numpy.nan
+                    ideal_amp_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = numpy.nan
+                    ideal_phase_solutions[:, sigma_counter, S_peak_counter, iteration_counter] = numpy.nan
 
                 S_peak_counter += 1
             sigma_counter += 1
         iteration_counter += 1
 
-    #~ noisy_amp_info, noisy_phase_info = FourD_solution_averager(noisy_amp_solutions, noisy_phase_solutions, red_groups,
-                            #~ red_tiles, peakfluxes, offsets, save_to_disk)
-    #~ ideal_amp_info, ideal_phase_info = FourD_solution_averager(ideal_amp_solutions, ideal_phase_solutions, red_groups,
-                            #~ red_tiles, peakfluxes, offsets, save_to_disk)
+    # ~ noisy_amp_info, noisy_phase_info = FourD_solution_averager(noisy_amp_solutions, noisy_phase_solutions, red_groups,
+    # ~ red_tiles, peakfluxes, offsets, save_to_disk)
+    # ~ ideal_amp_info, ideal_phase_info = FourD_solution_averager(ideal_amp_solutions, ideal_phase_solutions, red_groups,
+    # ~ red_tiles, peakfluxes, offsets, save_to_disk)
 
+    parameters = numpy.concatenate((red_tiles, red_groups))
+    axesdata = [parameters, offsets, peakfluxes, random_seeds]
+    axeslabels = ['parameters', 'positions_uncertainty', 'peak_flux', 'iteration']
+    save_to_hdf5(save_to_disk[1], "ideal_amp_solutions", ideal_amp_solutions,
+                 axesdata, axeslabels)
+    save_to_hdf5(save_to_disk[1], "ideal_phase_solutions", ideal_phase_solutions,
+                 axesdata, axeslabels)
 
-    parameters = numpy.concatenate((red_tiles,red_groups))
-    axesdata = [parameters,offsets,peakfluxes,random_seeds]
-    axeslabels=['parameters','positions_uncertainty', 'peak_flux','iteration']
-    save_to_hdf5(save_to_disk[1],"ideal_amp_solutions",ideal_amp_solutions,
-    axesdata,axeslabels)
-    save_to_hdf5(save_to_disk[1],"ideal_phase_solutions",ideal_phase_solutions,
-    axesdata,axeslabels)
+    save_to_hdf5(save_to_disk[1], "noisy_amp_solutions", noisy_amp_solutions,
+                 axesdata, axeslabels)
+    save_to_hdf5(save_to_disk[1], "noisy_phase_solutions", noisy_phase_solutions,
+                 axesdata, axeslabels)
 
-    save_to_hdf5(save_to_disk[1],"noisy_amp_solutions",noisy_amp_solutions,
-    axesdata,axeslabels)
-    save_to_hdf5(save_to_disk[1],"noisy_phase_solutions",noisy_phase_solutions,
-    axesdata,axeslabels)
-
-    #Calculate run time
+    # Calculate run time
     endtime = time.time()
     runtime = endtime - starttime
 
@@ -609,14 +612,13 @@ def max_source_and_position_offset_changer(telescope_param, calibration_channel,
     file.write("Telescope Parameters: " + str(telescope_param) + "\n")
     file.write("Calibration Channel: " + str(calibration_channel / 1e6) + "MHz \n")
     file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
     file.write("Noise Parameters: " + str(noise_param) + "\n")
     file.write("Peak Flux Range: " + str(peakflux_range) + "\n")
     file.write("Offset Range: " + str(offset_range) + "\n")
     file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Runtime: " +str(runtime)+"\n")
+    file.write("Runtime: " + str(runtime) + "\n")
     file.close()
-
-
 
     print "Runtime", runtime
     return
