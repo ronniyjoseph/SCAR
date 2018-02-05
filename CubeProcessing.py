@@ -32,8 +32,8 @@ def cube_processor(output_path,simulation_run,simulation_type,histogram_plotset,
         else:
             sys.exit("blaah")
     elif simulation_type == "SiSpS":
-        if histogram_plotset:
-            SiSps_histogram_inspection(output_path + simulation_run,histogram_plotset)
+        if histogram_plotset[0]:
+            SiSps_histogram_inspection(output_path + simulation_run, histogram_plotset[1])
         else:
             sys.exit("blaah")
     else:
@@ -142,9 +142,16 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     phase_plotscale = 'linear'
     number_bins = 100
     stepsize = 2
+    if len(position_offsets) > 5:
+        rows = numpy.arange(0,len(position_offsets),len(position_offsets)/5)
+        print rows
+    else:
+        rows = numpy.arange(0, len(position_offsets), 1)
+    if len(peak_fluxes) > 5:
+        cols = numpy.arange(0,len(peak_fluxes),len(peak_fluxes)/5)
+    else:
+        cols = numpy.arange(0, len(peak_fluxes), 1)
 
-    rows = numpy.arange(0,len(position_offsets),1)
-    cols = numpy.arange(0,len(peak_fluxes),1)
     nrow = len(rows)
     ncol = len(cols)
     plotcounter = 1
@@ -161,10 +168,10 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
             subplot.hist(solution_data[0, offset_index, flux_index, :], histtype='stepfilled', edgecolor='none', alpha=0.4,
                          bins=number_bins, facecolor=color)
 
-            subplot.text(0.95, 0.01, r'$\sigma =%s$' % (str(numpy.log10(position_offsets[offset_index]))),
+            subplot.text(0.95, 0.01, r'$log [\sigma] =%s$' % (str(numpy.around(numpy.log10(position_offsets[offset_index]),decimals=2))),
                          verticalalignment='bottom', horizontalalignment='right',
                          transform=subplot.transAxes, fontsize=15)
-            subplot.text(0.95, 0.21, r'$S =  %s Jy$' % (str(peak_fluxes[flux_index])),
+            subplot.text(0.95, 0.21, r'$S =  %s Jy$' % (str(numpy.around(peak_fluxes[flux_index],decimals=2))),
                          verticalalignment='bottom', horizontalalignment='right',
                          transform=subplot.transAxes, fontsize=15)
             minimum = numpy.min(solution_data[0, offset_index, flux_index, :])

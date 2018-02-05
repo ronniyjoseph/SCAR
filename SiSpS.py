@@ -8,12 +8,12 @@ from SimRunner import max_source_and_position_offset_changer
 def main(n_channels, output_folder, source_strength):
     calibration_channel = 150e6
     channel_size = 40e3
-    sky_param = ['point', "random"]
+    sky_param = ['point_and_background', "random"]
     noise_param = ['SEFD', 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
     iterations = 1000
-    peakflux_range = [1, 200, 20]    #Specify in Jy
-    offset_range = [1e-4, 1e-2,20]  #Specify in m
+    peakflux_range = [1, 1000,  20]    #Specify in Jy
+    offset_range = [1e-4, 1e-2, 20]  #Specify in m
     save_to_disk = [True, output_folder]
     telescope_param = ["linear", 10, 5]
     calibration_scheme = 'logcal'
@@ -31,7 +31,7 @@ if __name__ == "__main__":
                         default=0)
     parser.add_argument('-pointJy', action='store', default=200.,
                         type=float)
-    parser.add_argument('-path', action='store', default="../../simulation_output/SiSpS_HDF5_large/",
+    parser.add_argument('-path', action='store', default="../../simulation_output/SiSpS_HDF5_PBG_Random/",
                         type=str)
 
     args = parser.parse_args()
