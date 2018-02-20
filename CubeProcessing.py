@@ -31,9 +31,9 @@ def cube_processor(output_path,simulation_run,simulation_type,histogram_plotset,
             solution_averager(output_path + simulation_run, averaging_param, "noisy", "phase")
         else:
             sys.exit("blaah")
-    elif simulation_type == "SiSpS":
+    elif simulation_type[0] == "SiSpS":
         if histogram_plotset[0]:
-            SiSps_histogram_inspection(output_path + simulation_run, histogram_plotset[1])
+            SiSps_histogram_inspection(output_path + simulation_run, simulation_type[1], histogram_plotset[1])
         else:
             sys.exit("blaah")
     else:
@@ -41,26 +41,26 @@ def cube_processor(output_path,simulation_run,simulation_type,histogram_plotset,
     return
 
 
-def SiSps_histogram_inspection(output_folder, solution_type):
+def SiSps_histogram_inspection(output_folder, simulation_type, solution_type):
     if solution_type == "ideal":
-        create_solution_histogram_tile(output_folder, "ideal", "amp")
-        create_solution_histogram_tile(output_folder, "ideal", "phase")
+        create_solution_histogram_tile(output_folder, simulation_type, "ideal", "amp")
+        create_solution_histogram_tile(output_folder, simulation_type,"ideal", "phase")
     elif solution_type == "noisy":
-        create_solution_histogram_tile(output_folder, "noisy", "amp")
-        create_solution_histogram_tile(output_folder, "noisy", "phase")
+        create_solution_histogram_tile(output_folder, simulation_type, "noisy", "amp")
+        create_solution_histogram_tile(output_folder, simulation_type, "noisy", "phase")
     elif solution_type == "both":
-        create_solution_histogram_tile(output_folder, "both", "amp")
-        create_solution_histogram_tile(output_folder, "both", "phase")
+        create_solution_histogram_tile(output_folder, simulation_type, "both", "amp")
+        create_solution_histogram_tile(output_folder, simulation_type, "both", "phase")
     else:
         sys.exit("solution_type: please select 'ideal','noisy' or 'both', Goodbye.")
     return
 
-def create_solution_histogram_tile(output_folder, solution_type, solution_parameter):
+def create_solution_histogram_tile(output_folder, simulation_type, solution_type, solution_parameter):
     print ""
     print "Loading data"
     if solution_type == "ideal":
         ideal_solution_data, parameters, position_offsets, peak_fluxes, ideal_iterations = \
-            SiSpS_cube_loader(output_folder,  "ideal", solution_parameter)
+            SiSpS_cube_loader(output_folder, simulation_type,  "ideal", solution_parameter)
 
         #indices = numpy.where(abs(ideal_solution_quantity) > 5e7)[0]
         #number_visibilities = len(indices)
@@ -68,7 +68,7 @@ def create_solution_histogram_tile(output_folder, solution_type, solution_parame
 
     elif solution_type == "noisy":
         noisy_solution_data, parameters, position_offsets, peak_fluxes, noisy_iterations = \
-            SiSpS_cube_loader(output_folder, "noisy", solution_parameter)
+            SiSpS_cube_loader(output_folder, simulation_type, "noisy", solution_parameter)
 
         #indices = numpy.where(abs(noisy_solution_quantity) > 5e7)[0]
         #number_visibilities = len(indices)
@@ -76,9 +76,9 @@ def create_solution_histogram_tile(output_folder, solution_type, solution_parame
 
     elif solution_type == "both":
         ideal_solution_data, ideal_solution_quantity, ideal_position_offsets, ideal_peak_fluxes, ideal_iterations = \
-            SiSpS_cube_loader(output_folder,  "ideal", solution_parameter)
+            SiSpS_cube_loader(output_folder,simulation_type,  "ideal", solution_parameter)
         noisy_solution_data, noisy_solution_quantity, noisy_position_offsets, noisy_peak_fluxes, noisy_iterations = \
-            SiSpS_cube_loader(output_folder, "noisy", solution_parameter)
+            SiSpS_cube_loader(output_folder, simulation_type, "noisy", solution_parameter)
         ideal_indices = numpy.where(abs(ideal_solution_quantity) > 5e7)[0]
         noisy_indices = numpy.where(abs(ideal_solution_quantity) > 5e7)[0]
         if len(ideal_indices) != len(noisy_indices):
@@ -119,12 +119,19 @@ def create_solution_histogram_tile(output_folder, solution_type, solution_parame
             print "Generating plots"
             fig1 = pyplot.figure(figsize=(4*len(position_offsets), 4*len(peak_fluxes)))
             if solution_type == "ideal":
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index], ideal_solution_data[quantity_index,:,:,:], position_offsets, peak_fluxes)
+                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index],
+                                                    ideal_solution_data[quantity_index,:,:,:],
+                                                    position_offsets, peak_fluxes)
             elif solution_type == "noisy":
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index], noisy_solution_data[quantity_index,:,:,:], position_offsets, peak_fluxes)
+                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index],
+                                                    noisy_solution_data[quantity_index,:,:,:],
+                                                    position_offsets, peak_fluxes)
             elif solution_type == "both":
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index], ideal_solution_data[quantity_index,:,:,:], position_offsets, peak_fluxes, "r")
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index], noisy_solution_data[quantity_index,:,:,:], position_offsets, peak_fluxes, "b")
+                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index],
+                                                    [noisy_solution_data[quantity_index,:,:,:],
+                                                     ideal_solution_data[quantity_index,:,:,:]],
+                                                    position_offsets, peak_fluxes, ["C2","C1"])
+
 
 
             fig1.suptitle(r'' + str(parameters[quantity_index]) + 'solutions', y=1.001)
@@ -155,39 +162,44 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     nrow = len(rows)
     ncol = len(cols)
     plotcounter = 1
+
+
+
     for offset_index in rows:
         for flux_index in cols:
             subplot = fig1.add_subplot(nrow, ncol, plotcounter)
-            # print offset_index, flux_index
-            # print solution_data.shape
-            # print solution_data[:, :, :].shape
-            # print solution_data[offset_index, :, :].shape
-            #print solution_data[0,offset_index, flux_index, :].shape
+
+            if len(solution_data) == 1:
+                histogram_data = solution_data[0, offset_index, flux_index, :]
+
+            elif len(solution_data) > 1:
+                histogram_data = []
+                for dataset_number in range(len(solution_data)):
+                    histogram_data.append(solution_data[dataset_number][0, offset_index, flux_index, :])
 
 
-            subplot.hist(solution_data[0, offset_index, flux_index, :], histtype='stepfilled', edgecolor='none', alpha=0.4,
-                         bins=number_bins, facecolor=color)
+            subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
+                         bins=number_bins, color=color)
 
             subplot.text(0.95, 0.01, r'$log [\sigma] =%s$' % (str(numpy.around(numpy.log10(position_offsets[offset_index]),decimals=2))),
                          verticalalignment='bottom', horizontalalignment='right',
-                         transform=subplot.transAxes, fontsize=15)
+                         transform=subplot.transAxes, fontsize=labelfontsize)
             subplot.text(0.95, 0.21, r'$S =  %s Jy$' % (str(numpy.around(peak_fluxes[flux_index],decimals=2))),
                          verticalalignment='bottom', horizontalalignment='right',
-                         transform=subplot.transAxes, fontsize=15)
-            minimum = numpy.min(solution_data[0, offset_index, flux_index, :])
-            maximum = numpy.max(solution_data[0, offset_index, flux_index, :])
+                         transform=subplot.transAxes, fontsize=labelfontsize)
 
-            subplot.set_xlim([minimum, maximum])
+            subplot.set_yscale('log')
+            #subplot.set_xlim([minimum, maximum])
             plotcounter += 1
 
     return fig1
 
 
 
-def SiSpS_cube_loader(output_folder,solution_type,solution_parameter):
+def SiSpS_cube_loader(output_folder, simulation_type, solution_type,solution_parameter):
     print output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5"
 
-    solution_cube = h5py.File(output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
+    solution_cube = h5py.File(output_folder + "/"+ simulation_type+"_" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
     position_offsets = solution_cube['positions_uncertainty'][:]

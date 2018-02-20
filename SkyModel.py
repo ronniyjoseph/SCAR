@@ -4,6 +4,7 @@ import sys
 
 def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
                        beam, seed):
+
     # Select the sky model
     if sky_model[0] == 'background':
         all_flux, all_l, all_m = flux_distribution(['random', seed])
@@ -14,13 +15,9 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
     elif sky_model[0] == 'point_and_background':
         # extract point source coordinates from list
         back_flux, back_l, back_m = flux_distribution(['random', seed])
-        print sky_model[1]
-        single_flux, single_l, single_m = flux_distribution(['single', \
-                                                             sky_model[1], sky_model[2], sky_model[3]])
-        print single_l.shape
-        print single_l
-        print back_l.shape
+        single_flux, single_l, single_m = flux_distribution(['single', sky_model[1], sky_model[2], sky_model[3]])
         all_flux = numpy.concatenate((single_flux, back_flux))
+
         all_l = numpy.concatenate((single_l, back_l))
         all_m = numpy.concatenate((single_m, back_m))
     else:
@@ -34,6 +31,7 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
         bandwidth = noise_param[2]
         t_integration = noise_param[3]
         noise_level = sky_noise(SEFD, bandwidth, t_integration)
+
     elif noise_param[0] == False:
         noise_level = 0.
     else:

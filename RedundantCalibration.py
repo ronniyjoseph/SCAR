@@ -184,6 +184,7 @@ def LincalSolver(uv_positions, correlation_obs, amp_solutions, phase_solutions, 
 
 def Redundant_Calibrator(amp_matrix, phase_matrix, obs_visibilities,
                          red_baseline_table, red_tiles, red_groups, calibration_scheme):
+    #print red_tiles, red_groups
     ####################Redundant Calibration###########################
     if calibration_scheme[0] == 'logcal':
         # feed observations into a gain solver function

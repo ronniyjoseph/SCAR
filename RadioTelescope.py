@@ -3,6 +3,7 @@ import scipy.constants
 
 
 def xyz_position_creator(shape):
+    # type: (object) -> object
     """
 	Generates an array lay-out defined by input parameters, returns
 	x,y,z coordinates of each antenna in the array
