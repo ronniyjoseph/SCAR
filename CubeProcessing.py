@@ -148,22 +148,35 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     amplitude_plotscale = 'log'
     phase_plotscale = 'linear'
     number_bins = 100
-    stepsize = 2
-    if len(position_offsets) > 5:
-        rows = numpy.arange(0,len(position_offsets),len(position_offsets)/5)
+
+    row_start = 16#0
+    row_end   = 21#len(position_offsets)
+
+    col_start = 37#0
+    col_end   = 42#len(position_offsets)
+
+    stepsize = 1
+    if (row_end-row_start)/stepsize > 5:
+        rows = numpy.arange(row_start, row_end, (row_end-row_start)/5)
         print rows
     else:
-        rows = numpy.arange(0, len(position_offsets), 1)
-    if len(peak_fluxes) > 5:
-        cols = numpy.arange(0,len(peak_fluxes),len(peak_fluxes)/5)
+        rows = numpy.arange(row_start, row_end, stepsize)
+    if (col_end - col_start)/stepsize > 5:
+        cols = numpy.arange(col_start, col_end, (row_end-row_start)/5)
     else:
-        cols = numpy.arange(0, len(peak_fluxes), 1)
+        cols = numpy.arange(col_start, col_end, stepsize)
 
     nrow = len(rows)
     ncol = len(cols)
     plotcounter = 1
 
 
+    #################
+    ###################
+    #################3
+    solution_data = numpy.abs(solution_data)
+###########################
+    ############
 
     for offset_index in rows:
         for flux_index in cols:
@@ -174,8 +187,9 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
 
             elif len(solution_data) > 1:
                 histogram_data = []
+
                 for dataset_number in range(len(solution_data)):
-                    histogram_data.append(solution_data[dataset_number][0, offset_index, flux_index, :])
+                    histogram_data.append(solution_data[dataset_number, 0, offset_index, flux_index, :])
 
 
             subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
@@ -189,7 +203,12 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
                          transform=subplot.transAxes, fontsize=labelfontsize)
 
             subplot.set_yscale('log')
-            #subplot.set_xlim([minimum, maximum])
+
+            minimum = numpy.min(solution_data)
+
+            maximum = numpy.max(solution_data)
+
+            subplot.set_xlim([minimum, maximum])
             plotcounter += 1
 
     return fig1
@@ -203,7 +222,7 @@ def SiSpS_cube_loader(output_folder, simulation_type, solution_type,solution_par
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
     position_offsets = solution_cube['positions_uncertainty'][:]
-    peak_fluxes = solution_cube['peak_flux'][:]
+    peak_fluxes = solution_cube['peak_fluxes'][:]
     iterations = solution_cube['iteration'][:]
     solution_cube.close()
 

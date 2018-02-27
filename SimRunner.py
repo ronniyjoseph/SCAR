@@ -45,7 +45,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
         elif offset_param[2] == 'y':
             xyz_positions[offset_param[1], 2] += offset_param[3]
 
-    frequency_range = numpy.array([calibration_channel])
+    frequency_range = numpy.array(calibration_channel)
     gain_table = antenna_gain_creator(xyz_positions, frequency_range)
     baseline_table = baseline_converter(xyz_positions, gain_table,
                                         frequency_range)
@@ -59,10 +59,11 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
     # ~ intra_hex_index  =  numpy.equal(hex1_boolean[:,0], hex2_boolean[:,0])
     # ~ baseline_table = baseline_table[intra_hex_index,:]
 
-    print ""
-    print "Calibration of Redundant Arrays on Moving Point Sources (CRAMPS)"
+    print "Simulating the Calibration of Arrays with Redundancy (SCAR)"
+    print "Changing source position for fixed input parameters"
+
     # Find the redundant tiles
-    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL')
+    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL',verbose =True)
     # Calculate the solving matrices (only needs to be once)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
         red_baseline_table, xyz_positions)
@@ -226,7 +227,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
     file.write("Standard Redundant Calibration Simulation" + "\n")
     file.write("Telescope Parameters: " + str(telescope_param) + "\n")
     file.write("Telescope Offsets: " + str(offset_param) + "\n")
-    file.write("Calibration Channel: " + str(calibration_channel / 1e6) + "MHz \n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
     file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
     file.write("Iterations: " + str(iterations) + "\n")
     file.write("Noise Parameters: " + str(noise_param) + "\n")
@@ -247,7 +248,8 @@ def MuChSource_Mover(n_channels, telescope_param, calibration_channel, noise_par
                      sky_steps, sky_param, beam_param, save_to_disk):
     # Track how long it's taking
     starttime = time.time()
-
+    print "Simulating the Calibration of Arrays with Redundancy (SCAR)"
+    print "Changing source position and position offsets with a multi channel implementation"
     xyz_positions = xyz_position_creator(telescope_param)
     channel_size = noise_param[2]
 
@@ -464,6 +466,9 @@ def source_flux_and_position_offset_changer(telescope_param,calibration_channel,
                                               calibration_scheme, peakflux_range, offset_range,iterations,save_to_disk):
     """
     """
+
+    print "Simulating the Calibration of Arrays with Redundancy"
+    print "Changing Maximum Flux and Position offsets"
     start_time = time.time()
 
     minimum_position_offset = numpy.log10(offset_range[0])
@@ -489,7 +494,7 @@ def source_flux_and_position_offset_changer(telescope_param,calibration_channel,
         xyz_positions = antenna_table_loader(telescope_param[0])
 
     #generate antenna gains
-    frequency_range = numpy.array([calibration_channel])
+    frequency_range = numpy.array(calibration_channel)
     gain_table = antenna_gain_creator(xyz_positions, frequency_range)
 
     #Create an initial baseline tables to identify which parameters we're going to solve for.
@@ -622,6 +627,9 @@ def moving_source_and_position_offset_changer(telescope_param,calibration_channe
                                               calibration_scheme, offset_range,iterations,save_to_disk):
     """
     """
+    print "Simulating the Calibration of Arrays with Redundancy (SCAR)"
+    print "Changing source position and position offsets"
+
     start_time = time.time()
 
     source_positions = numpy.linspace(-1,1,999)
@@ -643,7 +651,7 @@ def moving_source_and_position_offset_changer(telescope_param,calibration_channe
         xyz_positions = antenna_table_loader(telescope_param[0])
 
     #generate antenna gains
-    frequency_range = numpy.array([calibration_channel])
+    frequency_range = numpy.array(calibration_channel)
     gain_table = antenna_gain_creator(xyz_positions, frequency_range)
 
     #Create an initial baseline tables to identify which parameters we're going to solve for.

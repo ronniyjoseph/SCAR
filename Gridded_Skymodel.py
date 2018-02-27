@@ -1,27 +1,34 @@
 import numpy
 import sys
-
+from scipy import interpolate
+from matplotlib import pyplot
 
 def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
-                       beam, seed):
+                       beam_param, seed):
     # Select the sky model
     if sky_model[0] == 'background':
         all_flux, all_l, all_m = flux_distribution(['random', seed])
+        point_source_list = numpy.stack((all_flux, all_l, all_m), axis=1)
     elif sky_model[0] == 'point':
         # extract point source coordinates from list
         all_flux, all_l, all_m = flux_distribution(['single', sky_model[1],
                                                     sky_model[2], sky_model[3]])
+        point_source_list= numpy.stack((all_flux, all_l, all_m), axis=1)
     elif sky_model[0] == 'point_and_background':
         # extract point source coordinates from list
         back_flux, back_l, back_m = flux_distribution(['random', seed])
         single_flux, single_l, single_m = flux_distribution(['single', sky_model[1], sky_model[2], sky_model[3]])
-        all_flux = numpy.concatenate((single_flux, back_flux))
+        point_source_list= numpy.concatenate((numpy.concatenate((single_flux, back_flux)),
+                                               numpy.concatenate((single_l, back_l)),
+                                               numpy.concatenate((single_m, back_m))),axis=1)
+        point_source_list = numpy.stack((numpy.concatenate((single_flux, back_flux)),
+                                         numpy.concatenate((single_l, back_l)),
+                                         numpy.concatenate((single_l, back_l))), axis=1)
 
-        all_l = numpy.concatenate((single_l, back_l))
-        all_m = numpy.concatenate((single_m, back_m))
     else:
-        sys.exit(str(noise) + ": is not a correct input for " \
+        sys.exit(str(noise_param) + ": is not a correct input for " \
                               "create_visibilities. Please adjust skymodel parameter")
+
 
     if noise_param[0] == 'source':
         noise_level = 0.1 * max(all_flux)
@@ -38,18 +45,29 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
                                        "create_mock_observations. True or False, please for " \
                                        "the noise variable")
 
+
+
     # Calculate the ideal measured amplitudes for these sources at different
     # frequencies
+    sky_image = flux_list_to_sky_image(point_source_list, baseline_table)
+    beam_attenuation = beam_attenuator(sky_image,beam_param)
+    attenuated_image = sky_image*beam_attenuation
+
     n_measurements = baseline_table.shape[0]
 
     model_visibilities = numpy.zeros((n_measurements, len(frequencies)), dtype=complex)
     obser_visibilities = numpy.zeros((n_measurements, len(frequencies)), dtype=complex)
     ideal_visibilities = numpy.zeros((n_measurements, len(frequencies)), dtype=complex)
 
+
+
     for i in range(len(frequencies)):
+        ###### Convert source list to image
+
+
         model_visibilities[:, i] = point_source_visibility(all_flux, all_l, \
                                                            all_m, baseline_table[:, 2, i], baseline_table[:, 3, i],
-                                                           beam)
+                                                           beam_param)
 
         ideal_visibilities[:, i] = model_visibilities[:, i] * baseline_table[:, 5, i] * \
                                    numpy.exp(1j * (baseline_table[:, 6, i]))
@@ -162,3 +180,72 @@ def point_source_visibility(flux, l, m, u, v, beam):
             sys.exit(beam[0] + " is an invalid beam parameter. Please " + \
                      "choose from 'none' or 'gaussian'")
     return source_visibilities
+
+
+def flux_list_to_sky_image(point_source_list, baseline_table):
+    #####################################
+    #####################################
+    # Assume the sky is flat
+    #####################################
+
+    #Converts list of sources into an image of the sky
+    source_flux = point_source_list[:,0]
+    source_l = point_source_list[:,1]
+    source_m = point_source_list[:,2]
+
+    #Find longest baseline to determine sky_image sampling, pick highest frequency for longest baseline
+    max_u = numpy.max(numpy.abs(baseline_table[:, 2, -1]))
+    max_v = numpy.max(numpy.abs(baseline_table[:, 3, -1]))
+
+    if max_u > 0:
+        min_l = 1./max_u
+    else:
+        min_l = 0.1
+    if max_v > 0:
+        min_m = 1./max_v
+    else:
+        min_m = 0.1
+    l_start = -1.
+    m_start = -1.
+    delta_l = 0.1*min_l
+    delta_m = 0.1*min_m
+    l_pixel_dimension = int(2./delta_l)
+    m_pixel_dimension = int(2./delta_m)
+    n_frequencies = baseline_table.shape[2]
+
+    print l_pixel_dimension
+    #empty sky_image
+
+    sky_image =  numpy.zeros((l_pixel_dimension,m_pixel_dimension,n_frequencies))
+
+
+    for frequency_index in range(n_frequencies):
+        pixel_coordinates = list_image_mapper(l_start, m_start,delta_l,delta_m,[source_l, source_m])
+        sky_image[pixel_coordinates[0],pixel_coordinates[1],frequency_index] += source_flux
+    return sky_image
+
+
+def list_image_mapper(x_start,y_start,x_pixel_size,y_pixel_size,list):
+    #Converts list
+    x_pixel_indices = (list[0] - x_start)/x_pixel_size
+    y_pixel_indices = (list[1] - y_start)/y_pixel_size
+
+    print max(x_pixel_indices)
+
+
+    #Thanks to V. Tudor.
+    pyplot.hist(x_pixel_indices)
+    pyplot.show()
+    return [x_pixel_indices, y_pixel_indices]
+
+def beam_attenuator(sky_image, beam_param, frequencies):
+    l_coordinates = numpy.linspace(-1,1,sky_image.shape[0])
+    m_coordinates = numpy.linspace(-1,1,sky_image.shape[1])
+
+    l_mesh, m_mesh, frequency_mesh = numpy.meshgrid(l_coordinates,m_coordinates,frequencies,indexing="ij")
+    width_l = beam_param[1]
+    width_m = beam_param[2]
+
+    beam_attenuation = numpy.exp(-0.5 * (l_mesh ** 2. / width_l ** 2. + m_mesh ** 2. / width_m ** 2.))
+    #beam_attenuation = numpy.tile(beam_image,(2,sky_image.shape[2]))
+    return beam_attenuation

@@ -117,7 +117,7 @@ def xyz_position_creator(shape):
     return xyz_coordinates
 
 
-def baseline_converter(xy_positions, gain_table, frequency_channels,verbose=True):
+def baseline_converter(xy_positions, gain_table, frequency_channels, verbose=True):
     if verbose:
         print ""
         print "Converting xyz to uvw-coordinates"
