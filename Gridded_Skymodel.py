@@ -49,9 +49,10 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
 
     # Calculate the ideal measured amplitudes for these sources at different
     # frequencies
-    sky_image = flux_list_to_sky_image(point_source_list, baseline_table)
+    sky_image, l_coordinates, m_coordinates = flux_list_to_sky_image(point_source_list, baseline_table)
     beam_attenuation = beam_attenuator(sky_image,beam_param)
     attenuated_image = sky_image*beam_attenuation
+
 
     n_measurements = baseline_table.shape[0]
 
@@ -213,29 +214,25 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
     m_pixel_dimension = int(2./delta_m)
     n_frequencies = baseline_table.shape[2]
 
-    print l_pixel_dimension
     #empty sky_image
 
     sky_image =  numpy.zeros((l_pixel_dimension,m_pixel_dimension,n_frequencies))
 
+    l_coordinates = numpy.linspace(-1,1,l_pixel_dimension+1)
+    m_coordinates = numpy.linspace(-1,1,m_pixel_dimension+1)
 
     for frequency_index in range(n_frequencies):
-        pixel_coordinates = list_image_mapper(l_start, m_start,delta_l,delta_m,[source_l, source_m])
-        sky_image[pixel_coordinates[0],pixel_coordinates[1],frequency_index] += source_flux
-    return sky_image
+        sky_image[:,:,frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
+                                                           bins = (l_coordinates, m_coordinates),
+                                                           weights = source_flux)
+    return sky_image, l_coordinates, m_coordinates
 
 
-def list_image_mapper(x_start,y_start,x_pixel_size,y_pixel_size,list):
+def list_image_mapper(l_coordinates, m_coordinates,list):
     #Converts list
-    x_pixel_indices = (list[0] - x_start)/x_pixel_size
-    y_pixel_indices = (list[1] - y_start)/y_pixel_size
+    x_pixel_indices = numpy.digitize(list[0], l_coordinates)
+    y_pixel_indices = numpy.digitize(list[1], m_coordinates)
 
-    print max(x_pixel_indices)
-
-
-    #Thanks to V. Tudor.
-    pyplot.hist(x_pixel_indices)
-    pyplot.show()
     return [x_pixel_indices, y_pixel_indices]
 
 def beam_attenuator(sky_image, beam_param, frequencies):

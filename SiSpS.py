@@ -13,7 +13,7 @@ def main(n_channels, output_folder, source_strength):
     sim_type = "changing_flux"
     noise_param = ['SEFD', 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
-    iterations = 100000
+    iterations = 10000
     peakflux_range = [1, 2e2,  49]    #Specify in Jy
     offset_range = [1e-4, 0.15, 51]  #Specify in m
     save_to_disk = [True, output_folder]
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                         default=0)
     parser.add_argument('-pointJy', action='store', default=200.,
                         type=float)
-    parser.add_argument('-path', action='store', default="../../simulation_output/SiSpS_HDF5_P_Linear_Iter1e5/",
+    parser.add_argument('-path', action='store', default="../../simulation_output/SiSpS_HDF5_P_Linear_Iter1e4/",
                         type=str)
 
     args = parser.parse_args()
