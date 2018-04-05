@@ -20,7 +20,7 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
         all_l = numpy.concatenate((single_l, back_l))
         all_m = numpy.concatenate((single_m, back_m))
     else:
-        sys.exit(str(noise) + ": is not a correct input for " \
+        sys.exit(str(noise_param) + ": is not a correct input for " \
                               "create_visibilities. Please adjust skymodel parameter")
 
     if noise_param[0] == 'source':

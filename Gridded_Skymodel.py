@@ -2,9 +2,13 @@ import numpy
 import sys
 from scipy import interpolate
 from matplotlib import pyplot
+import powerbox
+
 
 def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
                        beam_param, seed):
+    n_measurements = baseline_table.shape[0]
+    n_frequencies = len(frequencies)
     # Select the sky model
     if sky_model[0] == 'background':
         all_flux, all_l, all_m = flux_distribution(['random', seed])
@@ -18,9 +22,6 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
         # extract point source coordinates from list
         back_flux, back_l, back_m = flux_distribution(['random', seed])
         single_flux, single_l, single_m = flux_distribution(['single', sky_model[1], sky_model[2], sky_model[3]])
-        point_source_list= numpy.concatenate((numpy.concatenate((single_flux, back_flux)),
-                                               numpy.concatenate((single_l, back_l)),
-                                               numpy.concatenate((single_m, back_m))),axis=1)
         point_source_list = numpy.stack((numpy.concatenate((single_flux, back_flux)),
                                          numpy.concatenate((single_l, back_l)),
                                          numpy.concatenate((single_l, back_l))), axis=1)
@@ -37,7 +38,6 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
         bandwidth = noise_param[2]
         t_integration = noise_param[3]
         noise_level = sky_noise(SEFD, bandwidth, t_integration)
-
     elif noise_param[0] == False:
         noise_level = 0.
     else:
@@ -50,36 +50,30 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
     # Calculate the ideal measured amplitudes for these sources at different
     # frequencies
     sky_image, l_coordinates, m_coordinates = flux_list_to_sky_image(point_source_list, baseline_table)
-    beam_attenuation = beam_attenuator(sky_image,beam_param)
+    delta_l = numpy.diff(l_coordinates)
+    delta_m = numpy.diff(m_coordinates)
+
+    if beam_param[0] == 'none':
+        beam_attenuation = 1
+    elif beam_param[0] == 'gaussian':
+        beam_attenuation = beam_attenuator(sky_image, beam_param, frequencies)
+    else:
+        sys.exit(str(beam_param[0])+" is an invalid beam parameter, please change to 'none' or 'gaussian'")
+
     attenuated_image = sky_image*beam_attenuation
+    visibility_grid, uv_coordinates = powerbox.dft.fft(attenuated_image, L=2., axes=(0, 1))
+
+    model_visibilities = uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_coordinates)/(delta_l[0]*delta_m[0])
 
 
-    n_measurements = baseline_table.shape[0]
+    ideal_visibilities = model_visibilities*baseline_table[:, 5, :]*numpy.exp(1j *baseline_table[:, 6, :])
 
-    model_visibilities = numpy.zeros((n_measurements, len(frequencies)), dtype=complex)
-    obser_visibilities = numpy.zeros((n_measurements, len(frequencies)), dtype=complex)
-    ideal_visibilities = numpy.zeros((n_measurements, len(frequencies)), dtype=complex)
+    amp_noise = numpy.random.normal(0, 1, size =(n_measurements, n_frequencies))
+    phase_noise = numpy.random.normal(0, 1, size=( n_measurements, n_frequencies))
 
+    obs_visibilities = ideal_visibilities + noise_level * (amp_noise + 1j * phase_noise)
 
-
-    for i in range(len(frequencies)):
-        ###### Convert source list to image
-
-
-        model_visibilities[:, i] = point_source_visibility(all_flux, all_l, \
-                                                           all_m, baseline_table[:, 2, i], baseline_table[:, 3, i],
-                                                           beam_param)
-
-        ideal_visibilities[:, i] = model_visibilities[:, i] * baseline_table[:, 5, i] * \
-                                   numpy.exp(1j * (baseline_table[:, 6, i]))
-
-        amp_noise = numpy.random.normal(0, 1, n_measurements)
-        phase_noise = numpy.random.normal(0, 1, n_measurements)
-
-        obser_visibilities[:, i] = ideal_visibilities[:, i] + \
-                                   noise_level * (amp_noise + 1j * phase_noise)
-
-    return obser_visibilities, ideal_visibilities, model_visibilities
+    return obs_visibilities, ideal_visibilities, model_visibilities
 
 
 def flux_distribution(model):
@@ -206,34 +200,82 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
         min_m = 1./max_v
     else:
         min_m = 0.1
-    l_start = -1.
-    m_start = -1.
+
     delta_l = 0.1*min_l
     delta_m = 0.1*min_m
     l_pixel_dimension = int(2./delta_l)
+    if l_pixel_dimension % 2 != 0:
+        l_pixel_dimension += 1
     m_pixel_dimension = int(2./delta_m)
+    if m_pixel_dimension % 2 != 0:
+        m_pixel_dimension += 1
     n_frequencies = baseline_table.shape[2]
 
     #empty sky_image
-
     sky_image =  numpy.zeros((l_pixel_dimension,m_pixel_dimension,n_frequencies))
 
-    l_coordinates = numpy.linspace(-1,1,l_pixel_dimension+1)
-    m_coordinates = numpy.linspace(-1,1,m_pixel_dimension+1)
+    l_coordinates = numpy.linspace(-1,1,l_pixel_dimension)
+    m_coordinates = numpy.linspace(-1,1,m_pixel_dimension)
 
+    l_shifts = numpy.diff(l_coordinates)/2.
+    m_shifts = numpy.diff(m_coordinates)/2.
+
+    l_bin_edges = numpy.concatenate((numpy.array([l_coordinates[0] - l_shifts[0]]),
+                                     l_coordinates[1:] - l_shifts,
+                                     numpy.array([l_coordinates[-1] + l_shifts[-1]])))
+    m_bin_edges = numpy.concatenate((numpy.array([m_coordinates[0] - l_shifts[0]]),
+                                     m_coordinates[1:] - m_shifts,
+                                     numpy.array([m_coordinates[-1] + m_shifts[-1]])))
     for frequency_index in range(n_frequencies):
-        sky_image[:,:,frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
-                                                           bins = (l_coordinates, m_coordinates),
-                                                           weights = source_flux)
+        sky_image[:, :, frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
+                                                           bins=(l_bin_edges, m_bin_edges),
+                                                           weights=source_flux)
     return sky_image, l_coordinates, m_coordinates
 
 
-def list_image_mapper(l_coordinates, m_coordinates,list):
-    #Converts list
-    x_pixel_indices = numpy.digitize(list[0], l_coordinates)
-    y_pixel_indices = numpy.digitize(list[1], m_coordinates)
+def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
+    n_frequencies = baseline_table.shape[2]
+    n_measurements = baseline_table.shape[0]
+    #First of all convert the uv_grid to a bin_edges array
+    u_bin_centers = uv_grid[0]
+    v_bin_centers = uv_grid[1]
 
-    return [x_pixel_indices, y_pixel_indices]
+    u_shifts = numpy.diff(u_bin_centers)/2.
+    v_shifts = numpy.diff(v_bin_centers)/2.
+
+    u_bin_edges = numpy.concatenate((numpy.array([u_bin_centers[0] - u_shifts[0]]),
+                               u_bin_centers[1:] - u_shifts,
+                               numpy.array([u_bin_centers[-1] + u_shifts[-1]])))
+    v_bin_edges = numpy.concatenate((numpy.array([v_bin_centers[0] - v_shifts[0]]),
+                               v_bin_centers[1:] - v_shifts,
+                               numpy.array([v_bin_centers[-1] + v_shifts[-1]])))
+
+    #now we have the bin edges we can start binning our baseline table
+    #Create an empty array to store our baseline measurements in
+    visibilities = numpy.zeros((n_measurements, n_frequencies), dtype=complex)
+    print len(u_bin_centers)
+    print len(v_bin_centers)
+    print visibility_grid.shape
+    #print baseline_table[:, 2, 0]
+    for frequency_index in range(n_frequencies):
+        visibility_data = visibility_grid[:, :, frequency_index]
+
+        real_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.real(visibility_data))
+        imag_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.imag(visibility_data))
+
+        baseline_coordinates  = numpy.stack((baseline_table[:, 2, frequency_index], baseline_table[:, 3, frequency_index]), axis=1)
+        print baseline_coordinates.shape
+
+        visibilities[:, frequency_index] = real_component(baseline_coordinates) + 1j*imag_component(baseline_coordinates)
+
+        #u_index = numpy.digitize(baseline_table[:, 2, frequency_index], bins=u_bin_edges)
+        #v_index = numpy.digitize(baseline_table[:, 3, frequency_index], bins=v_bin_edges)
+
+        #print "centers in u bins", u_bin_centers[u_index-1]
+        #visibilities[:, frequency_index] = visibility_grid[u_index, v_index,frequency_index]
+
+    return visibilities
+
 
 def beam_attenuator(sky_image, beam_param, frequencies):
     l_coordinates = numpy.linspace(-1,1,sky_image.shape[0])

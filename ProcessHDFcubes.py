@@ -2,12 +2,12 @@ from CubeProcessing import cube_processor
 
 
 def main():
-    output_path = "../../simulation_output/"
+    output_path = "/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/"
 
     simulation_run = "CRAMPS_P200_Offset_All_Random"
     simulation_type = "CRAMPS"
 
-    simulation_run = "SiSpS_HDF5_P_Linear_TEST5"
+    simulation_run = "SiSpS_HDF5_P_Linear_Iter1e3"
     simulation_type = ["SiSpS", "SFPO"]
 
 
