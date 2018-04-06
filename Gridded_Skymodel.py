@@ -191,46 +191,32 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
     #Find longest baseline to determine sky_image sampling, pick highest frequency for longest baseline
     max_u = numpy.max(numpy.abs(baseline_table[:, 2, -1]))
     max_v = numpy.max(numpy.abs(baseline_table[:, 3, -1]))
-
-    if max_u > 0:
-        min_l = 1./max_u
-    else:
-        min_l = 0.1
-    if max_v > 0:
-        min_m = 1./max_v
-    else:
-        min_m = 0.1
+    max_b = max(max_u,max_v)
+    #sky_resolutions
+    min_l = 1./max_b
 
     delta_l = 0.1*min_l
-    delta_m = 0.1*min_m
     l_pixel_dimension = int(2./delta_l)
     if l_pixel_dimension % 2 != 0:
         l_pixel_dimension += 1
-    m_pixel_dimension = int(2./delta_m)
-    if m_pixel_dimension % 2 != 0:
-        m_pixel_dimension += 1
     n_frequencies = baseline_table.shape[2]
 
     #empty sky_image
-    sky_image =  numpy.zeros((l_pixel_dimension,m_pixel_dimension,n_frequencies))
+    sky_image =  numpy.zeros((l_pixel_dimension,l_pixel_dimension,n_frequencies))
 
     l_coordinates = numpy.linspace(-1,1,l_pixel_dimension)
-    m_coordinates = numpy.linspace(-1,1,m_pixel_dimension)
 
     l_shifts = numpy.diff(l_coordinates)/2.
-    m_shifts = numpy.diff(m_coordinates)/2.
 
     l_bin_edges = numpy.concatenate((numpy.array([l_coordinates[0] - l_shifts[0]]),
                                      l_coordinates[1:] - l_shifts,
                                      numpy.array([l_coordinates[-1] + l_shifts[-1]])))
-    m_bin_edges = numpy.concatenate((numpy.array([m_coordinates[0] - l_shifts[0]]),
-                                     m_coordinates[1:] - m_shifts,
-                                     numpy.array([m_coordinates[-1] + m_shifts[-1]])))
+
     for frequency_index in range(n_frequencies):
         sky_image[:, :, frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
-                                                           bins=(l_bin_edges, m_bin_edges),
+                                                           bins=(l_bin_edges, l_bin_edges),
                                                            weights=source_flux)
-    return sky_image, l_coordinates, m_coordinates
+    return sky_image, l_coordinates, l_coordinates
 
 
 def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
@@ -284,7 +270,11 @@ def beam_attenuator(sky_image, beam_param, frequencies):
     l_mesh, m_mesh, frequency_mesh = numpy.meshgrid(l_coordinates,m_coordinates,frequencies,indexing="ij")
     width_l = beam_param[1]
     width_m = beam_param[2]
-
-    beam_attenuation = numpy.exp(-0.5 * (l_mesh ** 2. / width_l ** 2. + m_mesh ** 2. / width_m ** 2.))
+    if beam_param[0] == 'gaussian':
+        beam_attenuation = numpy.exp(-0.5 * (l_mesh ** 2. / width_l ** 2. + m_mesh ** 2. / width_m ** 2.))
+    elif beam_param[0] == 'none':
+        beam_attenuation = numpy.zeros(l_mesh.shape) + 1
+    else:
+        sys.exit("Beam Parameter error: "+beam_param[0] +" should be gaussian or none")
     #beam_attenuation = numpy.tile(beam_image,(2,sky_image.shape[2]))
     return beam_attenuation
