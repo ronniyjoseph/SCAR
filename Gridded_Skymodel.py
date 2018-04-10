@@ -45,13 +45,10 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
                                        "create_mock_observations. True or False, please for " \
                                        "the noise variable")
 
-
-
     # Calculate the ideal measured amplitudes for these sources at different
     # frequencies
     sky_image, l_coordinates, m_coordinates = flux_list_to_sky_image(point_source_list, baseline_table)
     delta_l = numpy.diff(l_coordinates)
-    delta_m = numpy.diff(m_coordinates)
 
     if beam_param[0] == 'none':
         beam_attenuation = 1
@@ -61,11 +58,12 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
         sys.exit(str(beam_param[0])+" is an invalid beam parameter, please change to 'none' or 'gaussian'")
 
     attenuated_image = sky_image*beam_attenuation
-    visibility_grid, uv_coordinates = powerbox.dft.fft(attenuated_image, L=2., axes=(0, 1))
+    #shift the zero point of the array to [0,0]
+    shifted_image = numpy.fft.ifftshift(attenuated_image, axes=(0,1))
+    visibility_grid, uv_coordinates = powerbox.dft.fft(shifted_image, L=2., axes=(0, 1))
+    normalised_visibilities = visibility_grid/delta_l[0]**2.
 
-    model_visibilities = uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_coordinates)/(delta_l[0]*delta_m[0])
-
-
+    model_visibilities = uv_list_to_baseline_measurements(baseline_table, normalised_visibilities, uv_coordinates)
     ideal_visibilities = model_visibilities*baseline_table[:, 5, :]*numpy.exp(1j *baseline_table[:, 6, :])
 
     amp_noise = numpy.random.normal(0, 1, size =(n_measurements, n_frequencies))
@@ -194,10 +192,9 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
     max_b = max(max_u,max_v)
     #sky_resolutions
     min_l = 1./max_b
-
     delta_l = 0.1*min_l
     l_pixel_dimension = int(2./delta_l)
-    if l_pixel_dimension % 2 != 0:
+    if l_pixel_dimension % 2 == 0:
         l_pixel_dimension += 1
     n_frequencies = baseline_table.shape[2]
 
