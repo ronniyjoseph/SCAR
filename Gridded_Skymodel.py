@@ -219,37 +219,38 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
 def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
     n_frequencies = baseline_table.shape[2]
     n_measurements = baseline_table.shape[0]
-    #First of all convert the uv_grid to a bin_edges array
-    u_bin_centers = uv_grid[0]
-    v_bin_centers = uv_grid[1]
-
-    u_shifts = numpy.diff(u_bin_centers)/2.
-    v_shifts = numpy.diff(v_bin_centers)/2.
-
-    u_bin_edges = numpy.concatenate((numpy.array([u_bin_centers[0] - u_shifts[0]]),
-                               u_bin_centers[1:] - u_shifts,
-                               numpy.array([u_bin_centers[-1] + u_shifts[-1]])))
-    v_bin_edges = numpy.concatenate((numpy.array([v_bin_centers[0] - v_shifts[0]]),
-                               v_bin_centers[1:] - v_shifts,
-                               numpy.array([v_bin_centers[-1] + v_shifts[-1]])))
+    # #First of all convert the uv_grid to a bin_edges array
+    # u_bin_centers = uv_grid[0]
+    # v_bin_centers = uv_grid[1]
+    #
+    # u_shifts = numpy.diff(u_bin_centers)/2.
+    # v_shifts = numpy.diff(v_bin_centers)/2.
+    #
+    # u_bin_edges = numpy.concatenate((numpy.array([u_bin_centers[0] - u_shifts[0]]),
+    #                            u_bin_centers[1:] - u_shifts,
+    #                            numpy.array([u_bin_centers[-1] + u_shifts[-1]])))
+    # v_bin_edges = numpy.concatenate((numpy.array([v_bin_centers[0] - v_shifts[0]]),
+    #                            v_bin_centers[1:] - v_shifts,
+    #                            numpy.array([v_bin_centers[-1] + v_shifts[-1]])))
 
     #now we have the bin edges we can start binning our baseline table
     #Create an empty array to store our baseline measurements in
     visibilities = numpy.zeros((n_measurements, n_frequencies), dtype=complex)
-    print len(u_bin_centers)
-    print len(v_bin_centers)
+    print len(uv_grid[0])
+    print len(uv_grid[1])
     print visibility_grid.shape
     #print baseline_table[:, 2, 0]
     for frequency_index in range(n_frequencies):
         visibility_data = visibility_grid[:, :, frequency_index]
 
-        real_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.real(visibility_data))
-        imag_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.imag(visibility_data))
+        real_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.real(visibility_data))
+        imag_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.imag(visibility_data))
 
         baseline_coordinates  = numpy.stack((baseline_table[:, 2, frequency_index], baseline_table[:, 3, frequency_index]), axis=1)
         print baseline_coordinates.shape
 
-        visibilities[:, frequency_index] = real_component(baseline_coordinates) + 1j*imag_component(baseline_coordinates)
+        visibilities[:, frequency_index] = real_component(baseline_table[:, 2:4, frequency_index]) + \
+                                           1j*imag_component(baseline_table[:, 2:4, frequency_index])
 
         #u_index = numpy.digitize(baseline_table[:, 2, frequency_index], bins=u_bin_edges)
         #v_index = numpy.digitize(baseline_table[:, 3, frequency_index], bins=v_bin_edges)
