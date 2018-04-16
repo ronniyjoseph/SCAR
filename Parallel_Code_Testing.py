@@ -1,14 +1,9 @@
-import numpy
-import scipy
 from multiprocessing import Pool
-
+import numpy
 
 def f(x):
-    return x * x
-
-def simulation_caller():
-    with Pool(5) as p:
-        print(p.map(f, [1, 2, 3]))
-
-if  __name__ == "__main__":
-    simulation_caller()
+	a = numpy.zeros((5,5) +x*x
+	return a
+if __name__ == '__main__':
+	p = Pool(5)
+	print(p.map(f, [1, 2, 3]))
