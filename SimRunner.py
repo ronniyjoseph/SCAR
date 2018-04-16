@@ -17,7 +17,7 @@ from GeneralTools import visibility_histogram_plotter
 from GeneralTools import solution_histogram_plotter
 from GeneralTools import TrueSolutions_Organizer
 from GeneralTools import save_to_hdf5
-from SkyModel import CreateVisibilities
+from Gridded_Skymodel import CreateVisibilities
 from RedundantCalibration import Redundant_Calibrator
 from RedundantCalibration import LogcalMatrixPopulator
 
@@ -63,7 +63,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
     print "Changing source position for fixed input parameters"
 
     # Find the redundant tiles
-    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL',verbose =True)
+    red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose = True)
     # Calculate the solving matrices (only needs to be once)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
         red_baseline_table, xyz_positions)
@@ -119,12 +119,12 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
 
         for i in range(sky_steps):
             if direction == 'l':
-                l = numpy.array([sky_coords[i]])
-                m = numpy.array([0])
+                l = sky_coords[i]
+                m = 0
 
             elif direction == 'm':
-                l = numpy.array([0])
-                m = numpy.array([sky_coords[i]])
+                l = 0
+                m = sky_coords[i]
 
             # add a point source (with noise) to background
             if sky_param[0] == 'point_and_background':
@@ -135,7 +135,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
                     noise_param[0] = 'source'
                 point_obs_visibilities, point_ideal_visibilities, point_model_visibilities = \
                     CreateVisibilities(red_baseline_table, frequency_range
-                                       , noise_param, sky_model, beam_param, seed)
+                                       ,noise_param, sky_model, beam_param, seed)
 
                 obs_visibilities += point_obs_visibilities
                 ideal_visibilities += point_ideal_visibilities

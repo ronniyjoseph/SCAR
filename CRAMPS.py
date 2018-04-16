@@ -20,10 +20,10 @@ import numpy
 
 
 def main(n_channels, output_folder, source_strength):
-    calibration_channel = 150e6
+    calibration_channel = [150e6]
     channel_size = 40e3
     sky_steps = 999
-    sky_param = ['point_and_background', source_strength]     #Note with single point source noise will be point 10% point source dominated
+    sky_param = ['point', source_strength]     #Note with single point source noise will be point 10% point source dominated
     noise_param = ['SEFD', 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
     make_histogram_movie = False
@@ -32,11 +32,11 @@ def main(n_channels, output_folder, source_strength):
     telescope_param = ["linear", 10, 5]
     hist_movie = [make_histogram_movie, output_folder]
     calibration_scheme = 'logcal'  # 'logcal','lincal','full'
-    offset = [True, 2,'x', 0.15]
 
     tile_numbers = numpy.arange(0,5,1)
-    shifts = numpy.random.normal(0,0.18,5)
-    offset = [True, tile_numbers,'x', shifts]
+    shifts = numpy.random.normal(0,0.1,5)
+    #offset = [True, tile_numbers,'x', shifts]
+    offset = [True, 2,'x', 0.15]
 
     if n_channels == 0:
         Moving_Source(telescope_param, offset, calibration_channel, noise_param, 'l',
@@ -55,9 +55,11 @@ if __name__ == "__main__":
                         type=int)
     parser.add_argument('-pointJy', action='store', default=200,
                         type=float)
-    parser.add_argument('-path', action='store', default="../../simulation_output/CRAMPS_P200_Offset_All_Random/",
+    parser.add_argument('-path', action='store', default="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/"+
+							"CRAMPS_G_Linear_P200_Offset2_0.15_logcal/",
                         type=str)
 
     args = parser.parse_args()
 
     main(args.Nchan, args.path, args.pointJy)
+

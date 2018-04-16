@@ -2,7 +2,7 @@ import numpy
 import scipy.constants
 
 
-def xyz_position_creator(shape):
+def xyz_position_creator(shape, verbose = True):
     # type: (object) -> object
     """
 	Generates an array lay-out defined by input parameters, returns
@@ -27,8 +27,9 @@ def xyz_position_creator(shape):
 
 	"""
     if shape[0] == "square" or shape[0] == 'doublesquare':
-        print ""
-        print "Creating x- y- z-positions of a square array"
+        if verbose:
+            print ""
+            print "Creating x- y- z-positions of a square array"
         x_coordinates = numpy.arange(-shape[1], shape[1], shape[2])
         y_coordinates = numpy.arange(-shape[1], shape[1], shape[2])
 
@@ -54,8 +55,9 @@ def xyz_position_creator(shape):
             xyz_coordinates = numpy.vstack((block1, block2))
 
     elif shape[0] == 'hex' or shape[0] == 'doublehex':
-        print ""
-        print "Creating x- y- z-positions of a " + shape[0] + " array"
+        if verbose:
+            print ""
+            print "Creating x- y- z-positions of a " + shape[0] + " array"
 
         dx = shape[1]
         dy = dx * numpy.sqrt(3.) / 2.
@@ -106,13 +108,14 @@ def xyz_position_creator(shape):
             xyz_coordinates = numpy.vstack((first_hex, second_hex))
 
     elif shape[0] == 'linear':
-        print ""
-        print "Creating x- y- z-positions of a " + str(shape[2]) + " element linear array"
+        if verbose:
+            print ""
+            print "Creating x- y- z-positions of a " + str(shape[2]) + " element linear array"
         xyz_coordinates = numpy.zeros((shape[2], 4))
         xyz_coordinates[:, 0] = numpy.arange(shape[2]) + 1001
         xyz_coordinates[:, 1] = numpy.linspace(-shape[1], shape[1], shape[2])
     elif shape[0] == 'file':
-        xyz_positions = antenna_table_loader(shape[1])
+        xyz_coordinates = antenna_table_loader(shape[1])
 
     return xyz_coordinates
 

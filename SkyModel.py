@@ -15,8 +15,8 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
         # extract point source coordinates from list
         back_flux, back_l, back_m = flux_distribution(['random', seed])
         single_flux, single_l, single_m = flux_distribution(['single', sky_model[1], sky_model[2], sky_model[3]])
-        all_flux = numpy.concatenate((single_flux, back_flux))
 
+        all_flux = numpy.concatenate((single_flux, back_flux))
         all_l = numpy.concatenate((single_l, back_l))
         all_m = numpy.concatenate((single_m, back_m))
     else:

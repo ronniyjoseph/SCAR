@@ -59,7 +59,7 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
 
     attenuated_image = sky_image*beam_attenuation
     #shift the zero point of the array to [0,0]
-    shifted_image = numpy.fft.ifftshift(attenuated_image, axes=(0,1))
+    shifted_image = numpy.fft.ifftshift(attenuated_image, axes=(0, 1))
     visibility_grid, uv_coordinates = powerbox.dft.fft(shifted_image, L=2., axes=(0, 1))
     normalised_visibilities = visibility_grid/delta_l[0]**2.
 
@@ -67,7 +67,7 @@ def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
     ideal_visibilities = model_visibilities*baseline_table[:, 5, :]*numpy.exp(1j *baseline_table[:, 6, :])
 
     amp_noise = numpy.random.normal(0, 1, size =(n_measurements, n_frequencies))
-    phase_noise = numpy.random.normal(0, 1, size=( n_measurements, n_frequencies))
+    phase_noise = numpy.random.normal(0, 1, size=(n_measurements, n_frequencies))
 
     obs_visibilities = ideal_visibilities + noise_level * (amp_noise + 1j * phase_noise)
 
@@ -236,9 +236,9 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
     #now we have the bin edges we can start binning our baseline table
     #Create an empty array to store our baseline measurements in
     visibilities = numpy.zeros((n_measurements, n_frequencies), dtype=complex)
-    print len(uv_grid[0])
-    print len(uv_grid[1])
-    print visibility_grid.shape
+    #print len(uv_grid[0])
+    #print len(uv_grid[1])
+    #print visibility_grid.shape
     #print baseline_table[:, 2, 0]
     for frequency_index in range(n_frequencies):
         visibility_data = visibility_grid[:, :, frequency_index]
@@ -247,7 +247,6 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
         imag_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.imag(visibility_data))
 
         baseline_coordinates  = numpy.stack((baseline_table[:, 2, frequency_index], baseline_table[:, 3, frequency_index]), axis=1)
-        print baseline_coordinates.shape
 
         visibilities[:, frequency_index] = real_component(baseline_table[:, 2:4, frequency_index]) + \
                                            1j*imag_component(baseline_table[:, 2:4, frequency_index])
