@@ -7,6 +7,7 @@ from GeneralTools import table_setup
 from matplotlib import pyplot
 from matplotlib import rcParams
 from matplotlib import rc
+from GeneralTools import save_to_hdf5
 
 rcParams['mathtext.default'] = 'regular'
 rcParams.update({'figure.autolayout': True})
@@ -15,30 +16,74 @@ rcParams.update({'figure.autolayout': True})
 This module contains all functions required to process the full solutions hdf5 files
 *solution histogram plotter makes videos of the cube as the sources moves along the sky
 *Solution averager calculates the mean/median and std/iqr
-
 """
 
 
-def cube_processor(output_path, simulation_run, simulation_type, histogram_plotset, averaging_param):
+
+def data_processor(output_path, simulation_type, stacking_mode, histogram_plotset, averaging_param):
     if simulation_type == "CRAMPS":
         if histogram_plotset[0]:
             CRAMPS_histogram_inspection(output_path + simulation_run, histogram_plotset)
         elif averaging_param[0]:
-            solution_averager(output_path + simulation_run, averaging_param, "ideal", "amp")
-            solution_averager(output_path + simulation_run, averaging_param, "ideal", "phase")
+            solution_averager(output_path, averaging_param, "ideal", "amp")
+            solution_averager(output_path, averaging_param, "ideal", "phase")
 
-            solution_averager(output_path + simulation_run, averaging_param, "noisy", "amp")
-            solution_averager(output_path + simulation_run, averaging_param, "noisy", "phase")
+            solution_averager(output_path, averaging_param, "noisy", "amp")
+            solution_averager(output_path, averaging_param, "noisy", "phase")
         else:
             sys.exit("blaah")
-    elif simulation_type[0] == "SiSpS":
+    elif simulation_type == "SFPO" or simulation_type == "SLPO":
+        if stacking_mode[0]:
+            data_stacker4D(output_path, simulation_type)
+
         if histogram_plotset[0]:
-            SiSps_histogram_inspection(output_path + simulation_run, simulation_type[1], histogram_plotset[1])
+            SiSps_histogram_inspection(output_path, simulation_type, histogram_plotset[1])
         else:
             sys.exit("blaah")
     else:
         sys.exit("Simulation type unknown: Please choose 'CRAMPS' or 'SiSpS'")
     return
+
+
+
+
+
+
+
+def data_stacker4D(folder, simulation_type):
+    output_list = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
+    for output in output_list:
+        thread_path = folder + "/threaded_" + output
+        list_directory = sorted(os.listdir(thread_path))
+
+        test_index = 800
+        # open op a file to get the right dimensions
+        solution_slice = h5py.File(thread_path + "/" + list_directory[test_index], 'r')
+        print thread_path + "/" + list_directory[test_index]
+        axes_keys = solution_slice.keys()
+
+        solution_data = solution_slice['data'][:]
+        solution_axes1 = solution_slice[axes_keys[1]][:]
+        solution_axes2 = solution_slice[axes_keys[2]][:]
+        solution_axes3 = solution_slice[axes_keys[3]][:]
+        solution_slice.close()
+        print ""
+        print "Input stuff"
+
+        data_cube = numpy.zeros(
+            (solution_data.shape[0], solution_data.shape[1], solution_data.shape[2], len(list_directory)))
+        counter = 0
+        for file_name in list_directory:
+            solution_slice = h5py.File(thread_path + "/" + file_name, 'r')
+            data_cube[:, :, :, counter] = solution_slice['data']
+            solution_slice.close()
+            counter += 1
+        data_axes = [solution_axes1, solution_axes2, solution_axes3, numpy.arange(len(list_directory))]
+        axes_keys.append("iteration")
+        cube_name = simulation_type[0] + "_" + output + "_solutions"
+        save_to_hdf5(folder, cube_name, data_cube, data_axes, axes_keys[1:])
+
+
 
 
 def SiSps_histogram_inspection(output_folder, simulation_type, solution_type):
@@ -148,13 +193,13 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     phase_plotscale = 'linear'
     number_bins = 100
 
-    row_start = 16  # 0
-    row_end = 21  # len(position_offsets)
+    row_start =    0
+    row_end =  len(position_offsets)
 
-    col_start = 37  # 0
-    col_end = 42  # len(peak_fluxes)
+    col_start = 0
+    col_end = len(peak_fluxes)
 
-    stepsize = 1
+    stepsize = 2
     if (row_end - row_start) / stepsize > 5:
         rows = numpy.arange(row_start, row_end, (row_end - row_start) / 5)
         print rows
@@ -172,7 +217,7 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     #################
     ###################
     #################
-    solution_data = numpy.abs(solution_data)
+    #solution_data = numpy.abs(solution_data)
     #######################
     ############
 
@@ -187,10 +232,11 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
                 histogram_data = []
 
                 for dataset_number in range(len(solution_data)):
-                    histogram_data.append(solution_data[dataset_number, 0, flux_index, offset_index, :])
 
-            bin_counts, _, _ = subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
-                                         bins=number_bins, color=color)
+                    histogram_data.append(solution_data[dataset_number][0, flux_index, offset_index, :])
+
+                bin_counts, _, _ = subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
+                                            bins=number_bins, color=color)
 
             subplot.text(0.95, 0.01, r'$log [\sigma] =%s$' % (
                 str(numpy.around(numpy.log10(position_offsets[offset_index]), decimals=2))),
@@ -207,16 +253,18 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
             maximum = numpy.max(bin_counts[0])
 
             subplot.set_ylim([minimum, maximum])
+            subplot.set_xlim([-2,2])
             plotcounter += 1
 
     return fig1
 
 
 def SiSpS_cube_loader(output_folder, simulation_type, solution_type, solution_parameter):
-    print output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5"
 
     solution_cube = h5py.File(
         output_folder + "/" + simulation_type + "_" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
+    print output_folder + "/" + simulation_type + "_" + solution_type + "_" + solution_parameter + "_solutions.h5"
+
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
     position_offsets = solution_cube['positions_uncertainty'][:]

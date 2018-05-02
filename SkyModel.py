@@ -2,7 +2,7 @@ import numpy
 import sys
 
 
-def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
+def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,np
                        beam, seed):
     # Select the sky model
     if sky_model[0] == 'background':

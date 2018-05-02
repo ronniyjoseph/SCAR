@@ -7,6 +7,8 @@ import powerbox
 
 def CreateVisibilities(baseline_table, frequencies, noise_param, sky_model,
                        beam_param, seed):
+    numpy.random.seed(seed)
+
     n_measurements = baseline_table.shape[0]
     n_frequencies = len(frequencies)
     # Select the sky model
@@ -94,6 +96,8 @@ def flux_distribution(model):
 
 def source_population(seed, k1=4100, gamma1=1.59, k2=4100, \
                       gamma2=2.5, S_low=400e-3, S_mid=1, S_high=5.):
+    numpy.random.seed(seed)
+
     # Franzen et al. 2016
     # k1 = 6998, gamma1 = 1.54, k2=6998, gamma2=1.54
     # S_low = 0.1e-3, S_mid = 6.0e-3, S_high= 400e-3 Jy
@@ -104,7 +108,6 @@ def source_population(seed, k1=4100, gamma1=1.59, k2=4100, \
 
     if S_low > S_mid:
         norm = k2 * (S_high ** (1. - gamma2) - S_low ** (1. - gamma2)) / (1. - gamma2)
-        numpy.random.seed(seed)
         n_sources = numpy.random.poisson(norm * 2. * numpy.pi)
         # generate uniform distribution
         uniform_distr = numpy.random.uniform(size=n_sources)
@@ -119,7 +122,6 @@ def source_population(seed, k1=4100, gamma1=1.59, k2=4100, \
                k2 * (S_high ** (1. - gamma2) - S_mid ** (1. - gamma2)) / (1. - gamma2)
         # transition between the one power law to the other
         mid_fraction = k1 / (1. - gamma1) * (S_mid ** (1. - gamma1) - S_low ** (1. - gamma1)) / norm
-        numpy.random.seed(seed)
         n_sources = numpy.random.poisson(norm * 2. * numpy.pi)
 
         #########################
