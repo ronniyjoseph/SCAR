@@ -141,7 +141,8 @@ def save_to_hdf5(pathfolder, fname, savedata, axesdata, axeslabels):
     # Check whether output folder is present
     if not os.path.exists(pathfolder):
         print ""
-        print "!!!Warning: Creating output folder in working directory!!!"
+        print "!!!Warning: Creating output folder at output destination!"
+        print pathfolder
         os.makedirs(pathfolder)
 
     if len(axesdata) != len(axeslabels):
@@ -551,3 +552,47 @@ def TrueSolutions_Organizer(gain_table, model_vis, red_baseline_table, red_tiles
 
     true_solutions = amp_solutions * numpy.exp(1j * phase_solutions)
     return true_solutions
+
+
+def off_set_finder(redundant_uvw_positions, centraltype):
+    print ""
+    print "Calculating the offsets for the redundant baselines"
+    redundant_uvw_offset = redundant_uvw_positions.copy()
+
+    # go through each group calculate the median
+    # find unique groups
+    unique_groups = unique_value_finder( \
+        redundant_uvw_positions[:, 5], 'values')
+    for i in range(len(unique_groups)):
+        group_indices = numpy.where(redundant_uvw_positions[:, 5] == \
+                                    unique_groups[i])
+        offset_values = numpy.zeros((len(group_indices[0]), 3))
+        # go trough u v w and calculate middles and offsets
+        for j in range(3):
+            if centraltype == 'median':
+                baseline_middle = numpy.median(redundant_uvw_positions[ \
+                                                   group_indices[0], 2 + j])
+            elif centraltype == 'mean':
+                baseline_middle = numpy.mean(redundant_uvw_positions[ \
+                                                 group_indices[0], 2 + j])
+            else:
+                sys.exit(str(centraltype) + ": is not a correct input for " \
+                                            "off_set_finder. 'median' or 'mean' please")
+            baseline_offset = baseline_middle - redundant_uvw_positions[ \
+                group_indices[0], 2 + j]
+            redundant_uvw_offset[group_indices[0], 2 + j] = baseline_offset
+
+    return redundant_uvw_offset
+
+def solution_mapper(parameters, offset_parameters, solutions):
+    mapped_solutions = numpy.zeros(len(parameters))
+
+    parameter_counter = 0
+    for parameter in parameters:
+        index = numpy.where(parameter == offset_parameters)[0]
+        if len(index) == 0:
+            mapped_solutions[parameter_counter] = numpy.nan
+        else:
+            mapped_solutions[parameter_counter] = solutions[index]
+
+    return mapped_solutions

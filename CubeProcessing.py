@@ -45,6 +45,39 @@ def data_processor(output_path, simulation_type, stacking_mode, histogram_plotse
     return
 
 
+def data_stacker4D(folder, simulation_type):
+    output_list = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
+    for output in output_list:
+        thread_path = folder + "/threaded_" + output
+        list_directory = sorted(os.listdir(thread_path))
+
+        test_index = 800
+        # open op a file to get the right dimensions
+        solution_slice = h5py.File(thread_path + "/" + list_directory[test_index], 'r')
+        print thread_path + "/" + list_directory[test_index]
+        axes_keys = solution_slice.keys()
+
+        solution_data = solution_slice['data'][:]
+        solution_axes1 = solution_slice[axes_keys[1]][:]
+        solution_axes2 = solution_slice[axes_keys[2]][:]
+        solution_axes3 = solution_slice[axes_keys[3]][:]
+        solution_slice.close()
+        print ""
+        print "Input stuff"
+
+        data_cube = numpy.zeros(
+            (solution_data.shape[0], solution_data.shape[1], solution_data.shape[2], len(list_directory)))
+        counter = 0
+        for file_name in list_directory:
+            solution_slice = h5py.File(thread_path + "/" + file_name, 'r')
+            data_cube[:, :, :, counter] = solution_slice['data']
+            solution_slice.close()
+            counter += 1
+        data_axes = [solution_axes1, solution_axes2, solution_axes3, numpy.arange(len(list_directory))]
+        axes_keys.append("iteration")
+        cube_name = simulation_type + "_" + output + "_solutions"
+        print cube_name
+        save_to_hdf5(folder, cube_name, data_cube, data_axes, axes_keys[1:])
 
 
 
@@ -80,7 +113,8 @@ def data_stacker4D(folder, simulation_type):
             counter += 1
         data_axes = [solution_axes1, solution_axes2, solution_axes3, numpy.arange(len(list_directory))]
         axes_keys.append("iteration")
-        cube_name = simulation_type[0] + "_" + output + "_solutions"
+        cube_name = simulation_type + "_" + output + "_solutions"
+        print cube_name
         save_to_hdf5(folder, cube_name, data_cube, data_axes, axes_keys[1:])
 
 

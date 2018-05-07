@@ -211,6 +211,7 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
                                      l_coordinates[1:] - l_shifts,
                                      numpy.array([l_coordinates[-1] + l_shifts[-1]])))
 
+
     for frequency_index in range(n_frequencies):
         sky_image[:, :, frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
                                                            bins=(l_bin_edges, l_bin_edges),

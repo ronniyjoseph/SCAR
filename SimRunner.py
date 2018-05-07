@@ -624,7 +624,7 @@ def source_flux_and_position_offset_changer(telescope_param,calibration_channel,
 
 
 def moving_source_and_position_offset_changer(telescope_param, calibration_channel, noise_param, sky_param, beam_param,
-                                              calibration_scheme, offset_range, iterations, save_to_disk):
+                                              calibration_scheme, source_position_range, offset_range, iterations, save_to_disk):
     """
     """
     print "Simulating the Calibration of Arrays with Redundancy (SCAR)"
@@ -632,7 +632,7 @@ def moving_source_and_position_offset_changer(telescope_param, calibration_chann
 
     start_time = time.time()
 
-    source_positions = numpy.linspace(-1, 1, 999)
+    source_positions = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
     position_step_number = offset_range[2]

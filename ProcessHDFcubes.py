@@ -7,10 +7,10 @@ def main():
     simulation_run = "CRAMPS_G_Linear_P200BG_Ideal_OffsetAll_Random_logcal"
     simulation_type = "CRAMPS"
 
-    output_path = "/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/SiSpS_Linear_P_BG/"
-    simulation_type ="SFPO"
+    output_path = "/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/SLPO_Linear_P_BG_Logcal/"
+    simulation_type ="SLPO"
 
-    stacking_mode = [False]
+    stacking_mode = [True]
     histogram_plotting = [True,'both']# "both"
     averaging_type = [False,"median",'std'] #"median" or "mean"
 
