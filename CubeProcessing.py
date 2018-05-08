@@ -45,41 +45,6 @@ def data_processor(output_path, simulation_type, stacking_mode, histogram_plotse
     return
 
 
-def data_stacker4D(folder, simulation_type):
-    output_list = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
-    for output in output_list:
-        thread_path = folder + "/threaded_" + output
-        list_directory = sorted(os.listdir(thread_path))
-
-        test_index = 800
-        # open op a file to get the right dimensions
-        solution_slice = h5py.File(thread_path + "/" + list_directory[test_index], 'r')
-        print thread_path + "/" + list_directory[test_index]
-        axes_keys = solution_slice.keys()
-
-        solution_data = solution_slice['data'][:]
-        solution_axes1 = solution_slice[axes_keys[1]][:]
-        solution_axes2 = solution_slice[axes_keys[2]][:]
-        solution_axes3 = solution_slice[axes_keys[3]][:]
-        solution_slice.close()
-        print ""
-        print "Input stuff"
-
-        data_cube = numpy.zeros(
-            (solution_data.shape[0], solution_data.shape[1], solution_data.shape[2], len(list_directory)))
-        counter = 0
-        for file_name in list_directory:
-            solution_slice = h5py.File(thread_path + "/" + file_name, 'r')
-            data_cube[:, :, :, counter] = solution_slice['data']
-            solution_slice.close()
-            counter += 1
-        data_axes = [solution_axes1, solution_axes2, solution_axes3, numpy.arange(len(list_directory))]
-        axes_keys.append("iteration")
-        cube_name = simulation_type + "_" + output + "_solutions"
-        print cube_name
-        save_to_hdf5(folder, cube_name, data_cube, data_axes, axes_keys[1:])
-
-
 
 
 
@@ -88,8 +53,8 @@ def data_stacker4D(folder, simulation_type):
     for output in output_list:
         thread_path = folder + "/threaded_" + output
         list_directory = sorted(os.listdir(thread_path))
-
-        test_index = 800
+        print len(list_directory)
+        test_index = 0
         # open op a file to get the right dimensions
         solution_slice = h5py.File(thread_path + "/" + list_directory[test_index], 'r')
         print thread_path + "/" + list_directory[test_index]
@@ -226,7 +191,6 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
     amplitude_plotscale = 'log'
     phase_plotscale = 'linear'
     number_bins = 100
-
     row_start =    0
     row_end =  len(position_offsets)
 
@@ -267,11 +231,14 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
 
                 for dataset_number in range(len(solution_data)):
 
-                    histogram_data.append(solution_data[dataset_number][0, flux_index, offset_index, :])
+                    selected_data = solution_data[dataset_number][0,offset_index,flux_index, :]
+                    print selected_data[::100]
+
+                    histogram_data.append(selected_data[~numpy.isnan(selected_data)])
+
 
                 bin_counts, _, _ = subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
                                             bins=number_bins, color=color)
-
             subplot.text(0.95, 0.01, r'$log [\sigma] =%s$' % (
                 str(numpy.around(numpy.log10(position_offsets[offset_index]), decimals=2))),
                          verticalalignment='bottom', horizontalalignment='right',
@@ -286,10 +253,9 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
 
             maximum = numpy.max(bin_counts[0])
 
-            subplot.set_ylim([minimum, maximum])
-            subplot.set_xlim([-2,2])
+            #subplot.set_ylim([minimum, maximum])
+            #subplot.set_xlim([-2,2])
             plotcounter += 1
-
     return fig1
 
 

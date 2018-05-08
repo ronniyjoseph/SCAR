@@ -19,10 +19,10 @@ def main(output_folder,sim_type, fixed_array, multi_processing):
     noise_param = ['SEFD', 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
     #fixed_array = True
-    iterations = 2
-    peakflux_range = [1, 2e2, 2]    #Specify in Jy
-    offset_range = [1e-4, 0.333, 2]  #Specify in m
-    source_position_range = [-1, 1,2 ]
+    iterations = 999
+    peakflux_range = [1, 2e2, 49]    #Specify in Jy
+    offset_range = [1e-4, 0.5, 51]  #Specify in m
+    source_position_range = [-1, 1, 555]
     save_to_disk = [True, output_folder]
     #telescope_param = ["hex", 14., 0, 0]
     telescope_param = ["linear", 10, 5, 0]
@@ -76,18 +76,15 @@ if __name__ == "__main__":
      Calibration Simulation set up')
     parser.add_argument('-path', action='store',
                         default="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/"
-                                                         "TEST2_SFPO_Linear_P_BG_Logcal/",
+                                                         "TEST2_SFPO_Linear_P_BG_Logcal_NEW/",
                         type=str)
-    parser.add_argument('-sim_type',  action='store', default="changing_flux",
+    parser.add_argument('-sim_type',  action='store', default="moving_source",
                         type=str)
-    parser.add_argument('-array_fix', action='store', default=False,
-                        type=bool)
-    parser.add_argument('-MP', action='store', default=True,
-                        type=bool)
+    parser.add_argument('-array_fix', action='store_true', default=False)
+    parser.add_argument('-MP', action='store_true', default=False,)
     parser.add_argument('-MP_Processes',  action='store', default=8,
                         type=int)
 
 
     args = parser.parse_args()
-
     main(args.path, args.sim_type, args.array_fix, [args.MP, args.MP_Processes])

@@ -17,7 +17,8 @@ from GeneralTools import visibility_histogram_plotter
 from GeneralTools import solution_histogram_plotter
 from GeneralTools import TrueSolutions_Organizer
 from GeneralTools import save_to_hdf5
-from Gridded_Skymodel import CreateVisibilities
+from SkyModel import numerical_visibilities
+from SkyModel import analytic_visibilities
 from RedundantCalibration import Redundant_Calibrator
 from RedundantCalibration import LogcalMatrixPopulator
 

@@ -594,5 +594,6 @@ def solution_mapper(parameters, offset_parameters, solutions):
             mapped_solutions[parameter_counter] = numpy.nan
         else:
             mapped_solutions[parameter_counter] = solutions[index]
+        parameter_counter +=1
 
     return mapped_solutions
