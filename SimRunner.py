@@ -115,7 +115,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
             # Create the visibilities for the static background sky
             sky_model = ['background']
             obs_visibilities, ideal_visibilities, model_visibilities = \
-                CreateVisibilities(red_baseline_table, frequency_range,
+                numerical_visibilities(red_baseline_table, frequency_range,
                                    [False], sky_model, beam_param, seed)
 
         for i in range(sky_steps):
@@ -135,7 +135,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
                 elif noise_param[0] and len(noise_param) == 1:
                     noise_param[0] = 'source'
                 point_obs_visibilities, point_ideal_visibilities, point_model_visibilities = \
-                    CreateVisibilities(red_baseline_table, frequency_range
+                    numerical_visibilities(red_baseline_table, frequency_range
                                        ,noise_param, sky_model, beam_param, seed)
 
                 obs_visibilities += point_obs_visibilities
@@ -151,7 +151,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
                 elif noise_param[0] and len(noise_param) == 1:
                     noise_param[0] = 'source'
                 point_obs_visibilities, point_ideal_visibilities, point_model_visibilities = \
-                    CreateVisibilities(red_baseline_table, frequency_range,
+                    numerical_visibilities(red_baseline_table, frequency_range,
                                        noise_param, sky_model, beam_param, seed)
 
                 obs_visibilities += point_obs_visibilities
@@ -163,7 +163,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
                 sky_model = ['point', sky_param[1], l, m]
                 noise_param[0] = 'source'
                 obs_visibilities, ideal_visibilities, model_visibilities = \
-                    CreateVisibilities(red_baseline_table, frequency_range
+                    numerical_visibilities(red_baseline_table, frequency_range
                                        , noise_param, sky_model, beam_param, seed)
 
             if calibration_scheme == 'lincal':

@@ -22,10 +22,10 @@ def main(output_folder,sim_type, fixed_array, multi_processing):
     iterations = 999
     peakflux_range = [1, 2e2, 49]    #Specify in Jy
     offset_range = [1e-4, 0.5, 51]  #Specify in m
-    source_position_range = [-1, 1, 555]
+    source_position_range = [-1, 1, 777]
     save_to_disk = [True, output_folder]
-    #telescope_param = ["hex", 14., 0, 0]
-    telescope_param = ["linear", 10, 5, 0]
+    telescope_param = ["hex", 14., 0, 0]
+    #telescope_param = ["linear", 10, 5, 0]
 
     calibration_scheme = 'logcal'
 

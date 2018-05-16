@@ -22,6 +22,8 @@ This module contains all functions required to process the full solutions hdf5 f
 
 def data_processor(output_path, simulation_type, stacking_mode, histogram_plotset, averaging_param):
     if simulation_type == "CRAMPS":
+        if stacking_mode[0]:
+            data_stacker3D(output_path, simulation_type)
         if histogram_plotset[0]:
             CRAMPS_histogram_inspection(output_path + simulation_run, histogram_plotset)
         elif averaging_param[0]:
@@ -44,7 +46,35 @@ def data_processor(output_path, simulation_type, stacking_mode, histogram_plotse
         sys.exit("Simulation type unknown: Please choose 'CRAMPS' or 'SiSpS'")
     return
 
+def data_stacker3D(folder, simulation_type):
+    output_list = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
+    for output in output_list:
+        thread_path = folder + "/threaded_" + output
+        list_directory = sorted(os.listdir(thread_path))
+        test_index = 0
+        # open op a file to get the right dimensions
+        solution_slice = h5py.File(thread_path + "/" + list_directory[test_index], 'r')
+        axes_keys = solution_slice.keys()
+        solution_data = solution_slice['data'][:]
+        solution_axes1 = solution_slice[axes_keys[1]][:]
+        solution_axes2 = solution_slice[axes_keys[2]][:]
+        solution_slice.close()
 
+        print ""
+        print "Input stuff"
+
+        data_cube = numpy.zeros(
+            (solution_data.shape[0], solution_data.shape[1], len(list_directory)))
+        counter = 0
+        for file_name in list_directory:
+            solution_slice = h5py.File(thread_path + "/" + file_name, 'r')
+            data_cube[:, :, counter] = solution_slice['data']
+            solution_slice.close()
+            counter += 1
+        data_axes = [solution_axes1, solution_axes2]
+        axes_keys[2] = 'source_locations'
+        cube_name = output + "_solutions"
+        save_to_hdf5(folder, cube_name, data_cube, data_axes, axes_keys[1:])
 
 
 
@@ -254,7 +284,7 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
             maximum = numpy.max(bin_counts[0])
 
             #subplot.set_ylim([minimum, maximum])
-            #subplot.set_xlim([-2,2])
+            subplot.set_xlim([0,2])
             plotcounter += 1
     return fig1
 
@@ -377,11 +407,10 @@ def CRAMPS_cube_loader(output_folder, solution_type, solution_parameter):
     solution_cube = h5py.File(output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
-    l = solution_cube['l_coordinates'][:]
-    iterations = solution_cube['iteration'][:]
+    l = solution_cube['source_locations'][:]
     solution_cube.close()
 
-    return solution_data, solution_quantity, l, iterations
+    return solution_data, solution_quantity, l
 
 
 def solution_histogram_plotter(fig1, number_visibilities, number_tiles, solution_data, solution_parameter,
@@ -445,10 +474,11 @@ def solution_histogram_plotter(fig1, number_visibilities, number_tiles, solution
 
 
 def solution_averager(output_folder, save_to_disk, solution_type, solution_parameter):
-    solution_data, solution_quantity, l, iterations = CRAMPS_cube_loader(output_folder, solution_type,
+    solution_data, solution_quantity, l = CRAMPS_cube_loader(output_folder, solution_type,
                                                                          solution_parameter)
 
-    number_iterations = len(iterations)
+    number_iterations = solution_data.shape[2]
+    print number_iterations
     # Create empty tables, to save the results for each sky step
     data_means = table_setup(len(solution_quantity) + 1, len(l) + 1)
     data_devs = table_setup(len(solution_quantity) + 1, len(l) + 1)

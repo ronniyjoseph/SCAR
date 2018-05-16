@@ -194,13 +194,13 @@ def single_iteration_source_flux_position_offset_Fixed(xyz_positions, gain_table
 
     prefix = str(0) * (len(str(n_processes)) - len(str(iteration))) + str(iteration)
 
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[0] + "/", prefix + "_SFPO_ideal_amp_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[0] + "/", prefix + "_SFPO_ideal_amp_solutions",
                  ideal_amp_solutions, axesdata, axeskeys)
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[1] + "/", prefix + "_SFPO_ideal_phase_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[1] + "/", prefix + "_SFPO_ideal_phase_solutions",
                  ideal_phase_solutions, axesdata, axeskeys)
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[2] + "/", prefix + "_SFPO_noisy_amp_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[2] + "/", prefix + "_SFPO_noisy_amp_solutions",
                  noisy_amp_solutions, axesdata, axeskeys)
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[3] + "/", prefix + "_SFPO_noisy_phase_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[3] + "/", prefix + "_SFPO_noisy_phase_solutions",
                  noisy_phase_solutions, axesdata, axeskeys)
 
     return
@@ -275,7 +275,7 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
     file.write("Noise Parameters: " + str(noise_param) + "\n")
     file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Source location parameters: " + str(source_locations) + "\n")
+    file.write("Source location parameters: " + str(source_position_range) + "\n")
     file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
     file.write("Offset Range: " + str(offset_range) + "\n")
     file.write("Beam Parameters: " + str(beam_param) + "\n")
@@ -379,13 +379,13 @@ def single_iteration_source_location_position_offset_Fixed(xyz_positions, gain_t
 
     prefix = str(0) * (len(str(n_processes)) - len(str(iteration))) + str(iteration)
 
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[0] + "/", prefix + "_SLPO_ideal_amp_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[0] + "/", prefix + "_SLPO_ideal_amp_solutions",
                  ideal_amp_solutions, axesdata, axeskeys)
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[1] + "/", prefix + "_SLPO_ideal_phase_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[1] + "/", prefix + "_SLPO_ideal_phase_solutions",
                  ideal_phase_solutions, axesdata, axeskeys)
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[2] + "/", prefix + "_SLPO_noisy_amp_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[2] + "/", prefix + "_SLPO_noisy_amp_solutions",
                  noisy_amp_solutions, axesdata, axeskeys)
-    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[3] + "/", prefix + "_SLPO_noisy_phase_solutions.txt",
+    save_to_hdf5(save_to_disk[1] + "threaded_" + output_types[3] + "/", prefix + "_SLPO_noisy_phase_solutions",
                  noisy_phase_solutions, axesdata, axeskeys)
 
     return
