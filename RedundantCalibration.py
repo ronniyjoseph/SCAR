@@ -179,6 +179,7 @@ def LincalSolver(uv_positions, correlation_obs, amp_solutions, phase_solutions, 
         visibility_0 = visibility_1.copy()
         d_solutions_0 = d_solutions_1.copy()
         # print "Lincal required %d iterations to converge" %counter
+
     return numpy.hstack((gain_1, visibility_1))
 
 

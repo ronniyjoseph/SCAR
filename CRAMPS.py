@@ -27,13 +27,13 @@ def main(n_channels, output_folder, source_strength, calibration_scheme, multi_p
     sky_param = ['point_and_background', source_strength]     #Note with single point source noise will be point 10% point source dominated
     noise_param = ['SEFD', 20e3, 40e3, 120]
     beam_param = ['gaussian', 0.25, 0.25]
-    source_position_range = [-1, 1, 777]
+    source_position_range = [-1, 1, 600]
     direction = 'l'
     make_histogram_movie = False
     iterations = 999
     save_to_disk = [True, output_folder]
-    telescope_param = ["linear", 10, 5]
-    #telescope_param = ["hex", 14., 0, 0]
+    #telescope_param = ["linear", 10, 5]
+    telescope_param = ["hex", 14., 0, 0]
     hist_movie = [make_histogram_movie, output_folder]
     offset_param = [off_bool, 2,'x', 0.15]
 

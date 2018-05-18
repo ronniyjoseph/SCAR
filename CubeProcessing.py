@@ -284,7 +284,7 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
             maximum = numpy.max(bin_counts[0])
 
             #subplot.set_ylim([minimum, maximum])
-            subplot.set_xlim([0,2])
+            subplot.set_xlim([-0.75,0.75])
             plotcounter += 1
     return fig1
 

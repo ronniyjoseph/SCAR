@@ -229,8 +229,6 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
     position_step_number = offset_range[2]
     position_offsets = numpy.logspace(minimum_position_offset, maximum_position_offset, position_step_number)
 
-    source_locations = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
-
     iterations = numpy.arange(n_iterations)
 
     # generate idealized telescope coordinates
@@ -251,6 +249,16 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
     baseline_table = baseline_converter(xyz_positions, gain_table, frequency_range)
     red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose=True)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(red_baseline_table, xyz_positions)
+
+    max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
+    min_l = 1. / max_b
+    delta_l = 0.1 * min_l
+    n_l_steps = int((source_position_range[1]-source_position_range[0]) / delta_l)
+
+    if n_l_steps >= source_position_range[2]:
+        source_position_range[2] = n_l_steps
+    source_locations = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
+
 
     pool = multiprocessing.Pool(processes=processes)
     iterator = partial(single_iteration_source_location_position_offset,
@@ -440,6 +448,14 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
     # Calculate the solving matrices (only needs to be once)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(
         red_baseline_table, xyz_positions)
+
+    max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
+    min_l = 1./max_b
+    delta_l = 0.1*min_l
+    n_l_steps = int((source_position_range[1]-source_position_range[0])/delta_l)
+
+    if n_l_steps >= source_position_range[2]:
+        source_position_range[2] = n_l_steps
 
     source_locations = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
 
