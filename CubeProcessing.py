@@ -194,15 +194,15 @@ def create_solution_histogram_tile(output_folder, simulation_type, solution_type
             print "Generating plots"
             fig1 = pyplot.figure(figsize=(4 * len(position_offsets), 4 * len(peak_fluxes)))
             if solution_type == "ideal":
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index],
+                fig1 = plot_solution_histogram_tile(fig1, solution_parameter,
                                                     ideal_solution_data[quantity_index, :, :, :],
                                                     position_offsets, peak_fluxes)
             elif solution_type == "noisy":
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index],
+                fig1 = plot_solution_histogram_tile(fig1, solution_parameter,
                                                     noisy_solution_data[quantity_index, :, :, :],
                                                     position_offsets, peak_fluxes)
             elif solution_type == "both":
-                fig1 = plot_solution_histogram_tile(fig1, parameters[quantity_index],
+                fig1 = plot_solution_histogram_tile(fig1, solution_parameter,
                                                     [noisy_solution_data[quantity_index, :, :, :],
                                                      ideal_solution_data[quantity_index, :, :, :]],
                                                     position_offsets, peak_fluxes, ["C2", "C1"])
@@ -215,7 +215,7 @@ def create_solution_histogram_tile(output_folder, simulation_type, solution_type
     return
 
 
-def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_offsets, peak_fluxes, color="b"):
+def plot_solution_histogram_tile(fig1, solution_parameter, solution_data, position_offsets, peak_fluxes, color="b"):
     # General plot formatting tools
     labelfontsize = 14
     amplitude_plotscale = 'log'
@@ -262,7 +262,6 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
                 for dataset_number in range(len(solution_data)):
 
                     selected_data = solution_data[dataset_number][0,offset_index,flux_index, :]
-                    print selected_data[::100]
 
                     histogram_data.append(selected_data[~numpy.isnan(selected_data)])
 
@@ -282,9 +281,11 @@ def plot_solution_histogram_tile(fig1, quantity_number, solution_data, position_
             minimum = numpy.min(bin_counts[0])
 
             maximum = numpy.max(bin_counts[0])
-
+            if solution_parameter == 'amp':
             #subplot.set_ylim([minimum, maximum])
-            subplot.set_xlim([-0.75,0.75])
+                subplot.set_xlim([0,2])
+            if solution_parameter == 'phase':
+                subplot.set_xlim([-0.75, 0.75])
             plotcounter += 1
     return fig1
 

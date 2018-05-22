@@ -61,7 +61,7 @@ if __name__ == "__main__":
                         type=float)
     parser.add_argument('-path', action='store',
                         default="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/"
-                                                         "TEST_CRAMPS_PBG/",
+                                                         "TEST0_CRAMPS_HEX_crash/",
                         type=str)
     parser.add_argument('-cal_mode', action='store', default='logcal', type=str)
     parser.add_argument('-MP', action='store_true', default=False,)

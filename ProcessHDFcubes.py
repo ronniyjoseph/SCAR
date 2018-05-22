@@ -2,7 +2,7 @@ from CubeProcessing import data_processor
 
 
 def main():
-    output_path ="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/TEST2_SFPO_HEX_P_BG_Logcal_NEW/"
+    output_path ="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/TEST2_SFPO_HEX_P_BG_Logcal_FIX/"
     simulation_type = "SFPO"
     #simulation_type ="SLPO"
 

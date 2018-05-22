@@ -38,6 +38,20 @@ def source_flux_and_position_offset_changer_parallel(telescope_param, calibratio
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
+    file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "w")
+    file.write("Changing Source Flux and Position Offset simulation\n")
+    file.write("Re-Realising Every Array\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
+    file.write("Offset Range: " + str(offset_range) + "\n")
+    file.write("Peak Flux Range: " + str(peakflux_range) + "\n")
+    file.write("Iterations: " + str(n_iterations) + "\n")
+    file.close()
+
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
     position_step_number = offset_range[2]
@@ -80,17 +94,6 @@ def source_flux_and_position_offset_changer_parallel(telescope_param, calibratio
     runtime = end_time - start_time
     print "Runtime", runtime
     file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "w")
-    file.write("Changing Source Flux and Position Offset simulation\n")
-    file.write("Re-Realising Every Array\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
-    file.write("Offset Range: " + str(offset_range) + "\n")
-    file.write("Peak Flux Range: " + str(peakflux_range) + "\n")
-    file.write("Iterations: " + str(n_iterations) + "\n")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
     return
@@ -224,6 +227,20 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
+    file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
+    file.write("Changing Source Location and Position Offset simulation\n")
+    file.write("Re-Realising Every Array\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
+    file.write("Offset Range: " + str(offset_range) + "\n")
+    file.write("Source location parameters: " + str(source_position_range) + "\n")
+    file.write("Iterations: " + str(n_iterations) + "\n")
+    file.close()
+
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
     position_step_number = offset_range[2]
@@ -273,17 +290,6 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
     print "Runtime", runtime
 
     file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
-    file.write("Changing Source Location and Position Offset simulation\n")
-    file.write("Re-Realising Every Array\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
-    file.write("Offset Range: " + str(offset_range) + "\n")
-    file.write("Source location parameters: " + str(source_position_range) + "\n")
-    file.write("Iterations: " + str(n_iterations) + "\n")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
     return
@@ -408,6 +414,22 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
+    file = open(save_to_disk[1] + "simulation_parameter.log", "w")
+    file.write("Standard Redundant Calibration Simulation" + "\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Telescope Offsets: " + str(offset_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
+    file.write("Iterations: " + str(iterations) + "\n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Source Direction: " + direction + "\n")
+    file.write("Sky Steps: " + str(sky_steps) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Iterations: " + str(iterations) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Save Parameters: " + str(save_to_disk) + "\n")
+    file.close()
+
     starttime = time.time()
 
     if telescope_param[0] == 'square' \
@@ -474,19 +496,6 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
 
     # Save input parameters to log file
     file = open(save_to_disk[1] + "simulation_parameter.log", "w")
-    file.write("Standard Redundant Calibration Simulation" + "\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Telescope Offsets: " + str(offset_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
-    file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Source Direction: " + direction + "\n")
-    file.write("Sky Steps: " + str(sky_steps) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Save Parameters: " + str(save_to_disk) + "\n")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
 

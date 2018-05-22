@@ -153,11 +153,12 @@ def LincalSolver(uv_positions, correlation_obs, amp_solutions, phase_solutions, 
 
     counter = 0
     d_corrections = 1
-    while d_corrections > 1e-9 and counter < 1000:
+    while d_corrections > 1e-9 and counter < 50:
 
         A_pinv, d_correlation = LincalMatrixPopulator(uv_positions, correlation_obs, gain_0, visibility_0, red_tiles,
                                                       red_groups)
         d_solutions_1 = numpy.dot(A_pinv, d_correlation)
+        d_solutions_1[0:2] = 0
 
         error = numpy.sum(numpy.abs(d_correlation)) / len(d_correlation)
         # ~ errorsub.plot(counter,error,"r+")
