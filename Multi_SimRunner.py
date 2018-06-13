@@ -2,6 +2,8 @@ import numpy
 import os
 import sys
 import time
+import logging
+import logging.config
 from functools import partial
 import multiprocessing
 from RadioTelescope import antenna_gain_creator
@@ -23,10 +25,20 @@ def source_flux_and_position_offset_changer_parallel(telescope_param, calibratio
                                                      calibration_scheme, peakflux_range, offset_range, n_iterations,
                                                      save_to_disk,
                                                      processes):
+
+    log = logging.getLogger("CRAMPS")
+    logging_level =  logging.INFO
+    logging.basicConfig(format="%(module)s:%(levelname)s %(message)s")
+    logging.basicConfig(level=logging_level, format="%(process)d:%(levelname)s %(message)s")
+    logging.basicConfig(filename=save_to_disk[1]+"logger.log", format="%(process)d:%(levelname)s %(message)s")
+
+    log.setLevel(logging_level)
+
+
     """
     """
 
-    print "Simulating the Calibration of Arrays with Redundancy"
+    "Simulating the Calibration of Arrays with Redundancy"
     print "Changing Maximum Flux and Position offsets"
     start_time = time.time()
 
@@ -38,19 +50,6 @@ def source_flux_and_position_offset_changer_parallel(telescope_param, calibratio
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
-    file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "w")
-    file.write("Changing Source Flux and Position Offset simulation\n")
-    file.write("Re-Realising Every Array\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
-    file.write("Offset Range: " + str(offset_range) + "\n")
-    file.write("Peak Flux Range: " + str(peakflux_range) + "\n")
-    file.write("Iterations: " + str(n_iterations) + "\n")
-    file.close()
 
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
@@ -83,6 +82,22 @@ def source_flux_and_position_offset_changer_parallel(telescope_param, calibratio
     red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose=True)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(red_baseline_table, xyz_positions)
 
+
+    file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "w")
+    file.write("Changing Source Flux and Position Offset simulation\n")
+    file.write("Re-Realising Every Array\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
+    file.write("Offset Range: " + str(offset_range) + "\n")
+    file.write("Peak Flux Range: " + str(peakflux_range) + "\n")
+    file.write("Iterations: " + str(n_iterations) + "\n")
+    file.close()
+
+
     pool = multiprocessing.Pool(processes=processes)
     iterator = partial(single_iteration_source_flux_position_offset,
                        xyz_positions, gain_table, frequency_range, peak_fluxes, position_offsets, calibration_scheme,
@@ -93,7 +108,7 @@ def source_flux_and_position_offset_changer_parallel(telescope_param, calibratio
 
     runtime = end_time - start_time
     print "Runtime", runtime
-    file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "w")
+    file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
     return
@@ -227,19 +242,6 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
-    file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
-    file.write("Changing Source Location and Position Offset simulation\n")
-    file.write("Re-Realising Every Array\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
-    file.write("Offset Range: " + str(offset_range) + "\n")
-    file.write("Source location parameters: " + str(source_position_range) + "\n")
-    file.write("Iterations: " + str(n_iterations) + "\n")
-    file.close()
 
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
@@ -267,6 +269,20 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
     red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose=True)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(red_baseline_table, xyz_positions)
 
+    file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
+    file.write("Changing Source Location and Position Offset simulation\n")
+    file.write("Re-Realising Every Array\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Calibration scheme: " + str(calibration_scheme) + "\n")
+    file.write("Offset Range: " + str(offset_range) + "\n")
+    file.write("Source location parameters: " + str(source_position_range) + "\n")
+    file.write("Iterations: " + str(n_iterations) + "\n")
+    file.close()
+
     max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
     min_l = 1. / max_b
     delta_l = 0.1 * min_l
@@ -289,7 +305,7 @@ def source_location_and_position_offset_changer_parallel(telescope_param, calibr
     runtime = end_time - start_time
     print "Runtime", runtime
 
-    file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
+    file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
     return
@@ -405,6 +421,16 @@ def single_iteration_source_location_position_offset(xyz_positions, gain_table, 
 def source_location_changer_MP(telescope_param, offset_param, calibration_channel, noise_param, direction,
                   sky_steps, source_position_range, iterations, sky_param, beam_param, calibration_scheme, save_to_disk,
                                processes):
+    #
+    # log = logging.getLogger(__name__)
+    # logging_level =  logging.INFO
+    # logging.basicConfig(format="%(module)s:%(levelname)s %(message)s")
+    # logging.basicConfig(level=logging_level, format="%(process)d:%(levelname)s %(message)s")
+    # logging.basicConfig(filename=save_to_disk[1]+"logger.log", format="%(process)d:%(levelname)s %(message)s")
+    # logging.basicConfig(filename='logger.log', filemode='w', level=logging.INFO)
+    #
+    # log.setLevel(logging_level)
+
 
     if not os.path.exists(save_to_disk[1]):
         print ""
@@ -414,21 +440,7 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
-    file = open(save_to_disk[1] + "simulation_parameter.log", "w")
-    file.write("Standard Redundant Calibration Simulation" + "\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Telescope Offsets: " + str(offset_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
-    file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Source Direction: " + direction + "\n")
-    file.write("Sky Steps: " + str(sky_steps) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Save Parameters: " + str(save_to_disk) + "\n")
-    file.close()
+
 
     starttime = time.time()
 
@@ -453,6 +465,23 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
     baseline_table = baseline_converter(xyz_positions, gain_table,
                                         frequency_range)
 
+
+    file = open(save_to_disk[1] + "simulation_parameter.log", "w")
+    file.write("Standard Redundant Calibration Simulation" + "\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Telescope Offsets: " + str(offset_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
+    file.write("Iterations: " + str(iterations) + "\n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Source Direction: " + direction + "\n")
+    file.write("Sky Steps: " + str(sky_steps) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Iterations: " + str(iterations) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Save Parameters: " + str(save_to_disk) + "\n")
+    file.close()
+
     ###################################################################
     #								intra sub array selecter
     ###################################################################
@@ -462,8 +491,8 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
     # ~ intra_hex_index  =  numpy.equal(hex1_boolean[:,0], hex2_boolean[:,0])
     # ~ baseline_table = baseline_table[intra_hex_index,:]
 
-    print "Simulating the Calibration of Arrays with Redundancy (SCAR)"
-    print "Changing source position for fixed input parameters"
+    print("Simulating the Calibration of Arrays with Redundancy (SCAR)")
+    print("Changing source position for fixed input parameters")
 
     # Find the redundant tiles
     red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose = True)
@@ -495,7 +524,7 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
     runtime = endtime - starttime
 
     # Save input parameters to log file
-    file = open(save_to_disk[1] + "simulation_parameter.log", "w")
+    file = open(save_to_disk[1] + "simulation_parameter.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
 
@@ -506,7 +535,8 @@ def source_location_changer_MP(telescope_param, offset_param, calibration_channe
 def single_iteration_source_location(source_locations, direction, frequency_range,
                                      sky_param, noise_param, beam_param, calibration_scheme, save_to_disk,red_baseline_table, gain_table, amp_matrix,
                                      phase_matrix, red_tiles, red_groups,n_iterations, iteration):
-
+    # log = logging.getLogger(__name__)
+    # log.info("Iteration "+str(iteration))
 
     n_tiles = len(red_tiles)
     n_groups = len(red_groups)
@@ -525,6 +555,7 @@ def single_iteration_source_location(source_locations, direction, frequency_rang
                                    [False], sky_model, beam_param, iteration)
 
     for location_index in range(len(source_locations)):
+        # log.info("location index " + str(location_index))
         if direction == 'l':
             l = source_locations[location_index]
             m = 0
@@ -579,6 +610,8 @@ def single_iteration_source_location(source_locations, direction, frequency_rang
             calibration_param = [calibration_scheme]
         else:
             sys.exit("You've chosen an invalid calibration parameter")
+
+        # log.info("Pass to calibrator")
 
         # Use the model data  to solve for the antenna gains
         ideal_amp_data, ideal_phase_data = Redundant_Calibrator(

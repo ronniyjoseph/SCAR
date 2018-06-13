@@ -25,7 +25,7 @@ def data_processor(output_path, simulation_type, stacking_mode, histogram_plotse
         if stacking_mode[0]:
             data_stacker3D(output_path, simulation_type)
         if histogram_plotset[0]:
-            CRAMPS_histogram_inspection(output_path + simulation_run, histogram_plotset)
+            CRAMPS_histogram_inspection(output_path, histogram_plotset)
         elif averaging_param[0]:
             solution_averager(output_path, averaging_param, "ideal", "amp")
             solution_averager(output_path, averaging_param, "ideal", "phase")
@@ -45,6 +45,7 @@ def data_processor(output_path, simulation_type, stacking_mode, histogram_plotse
     else:
         sys.exit("Simulation type unknown: Please choose 'CRAMPS' or 'SiSpS'")
     return
+
 
 def data_stacker3D(folder, simulation_type):
     output_list = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
@@ -219,9 +220,9 @@ def plot_solution_histogram_tile(fig1, solution_parameter, solution_data, positi
     # General plot formatting tools
     labelfontsize = 14
     amplitude_plotscale = 'log'
-    phase_plotscale = 'linear'
+    phase_plotscale = 'log'
     number_bins = 100
-    row_start =    0
+    row_start = 0
     row_end =  len(position_offsets)
 
     col_start = 0
@@ -258,16 +259,19 @@ def plot_solution_histogram_tile(fig1, solution_parameter, solution_data, positi
 
             elif len(solution_data) > 1:
                 histogram_data = []
-
                 for dataset_number in range(len(solution_data)):
 
                     selected_data = solution_data[dataset_number][0,offset_index,flux_index, :]
+                    print selected_data.shape
+                    if solution_parameter == 'amp':
+                        histogram_data.append(selected_data[~numpy.isnan(selected_data)])
+                    if solution_parameter == 'phase':
+                        histogram_data.append(selected_data[~numpy.isnan(selected_data)])
 
-                    histogram_data.append(selected_data[~numpy.isnan(selected_data)])
-
-
-                bin_counts, _, _ = subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
+            bin_counts, _, _ = subplot.hist(histogram_data, histtype='stepfilled', edgecolor='none', alpha=0.4,
                                             bins=number_bins, color=color)
+
+
             subplot.text(0.95, 0.01, r'$log [\sigma] =%s$' % (
                 str(numpy.around(numpy.log10(position_offsets[offset_index]), decimals=2))),
                          verticalalignment='bottom', horizontalalignment='right',
@@ -276,16 +280,20 @@ def plot_solution_histogram_tile(fig1, solution_parameter, solution_data, positi
                          verticalalignment='bottom', horizontalalignment='right',
                          transform=subplot.transAxes, fontsize=labelfontsize)
 
-            subplot.set_yscale('log')
 
             minimum = numpy.min(bin_counts[0])
 
             maximum = numpy.max(bin_counts[0])
+
             if solution_parameter == 'amp':
-            #subplot.set_ylim([minimum, maximum])
+                #subplot.set_ylim([minimum, maximum])
                 subplot.set_xlim([0,2])
+                subplot.set_yscale(amplitude_plotscale)
+
             if solution_parameter == 'phase':
                 subplot.set_xlim([-0.75, 0.75])
+                subplot.set_yscale(phase_plotscale)
+
             plotcounter += 1
     return fig1
 
@@ -307,13 +315,13 @@ def SiSpS_cube_loader(output_folder, simulation_type, solution_type, solution_pa
 
 
 def CRAMPS_histogram_inspection(output_folder, solution_type):
-    if solution_type == "ideal":
+    if solution_type[1] == "ideal":
         create_solution_histogram_video(output_folder, "ideal", "amp")
         create_solution_histogram_video(output_folder, "ideal", "phase")
-    elif solution_type == "noisy":
+    elif solution_type[1] == "noisy":
         create_solution_histogram_video(output_folder, "noisy", "amp")
         create_solution_histogram_video(output_folder, "noisy", "phase")
-    elif solution_type == "both":
+    elif solution_type[1] == "both":
         create_solution_histogram_video(output_folder, "both", "amp")
         create_solution_histogram_video(output_folder, "both", "phase")
     else:
@@ -330,7 +338,7 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
     print ""
     print "Loading data"
     if solution_type == "ideal":
-        ideal_solution_data, ideal_solution_quantity, l, ideal_iterations = CRAMPS_cube_loader(output_folder,
+        ideal_solution_data, ideal_solution_quantity, l = CRAMPS_cube_loader(output_folder,
                                                                                                solution_type,
                                                                                                solution_parameter)
         indices = numpy.where(abs(ideal_solution_quantity) > 5e7)[0]
@@ -338,7 +346,7 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
         number_tiles = len(ideal_solution_quantity) - number_visibilities
 
     elif solution_type == "noisy":
-        noisy_solution_data, noisy_solution_quantity, l, noisy_iterations = CRAMPS_cube_loader(output_folder,
+        noisy_solution_data, noisy_solution_quantity, l= CRAMPS_cube_loader(output_folder,
                                                                                                solution_type,
                                                                                                solution_parameter)
         indices = numpy.where(abs(noisy_solution_quantity) > 5e7)[0]
@@ -346,10 +354,10 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
         number_tiles = len(noisy_solution_quantity) - number_visibilities
 
     elif solution_type == "both":
-        ideal_solution_data, ideal_solution_quantity, ideal_l, ideal_iterations = CRAMPS_cube_loader(output_folder,
+        ideal_solution_data, ideal_solution_quantity, ideal_l = CRAMPS_cube_loader(output_folder,
                                                                                                      "ideal",
                                                                                                      solution_parameter)
-        noisy_solution_data, noisy_solution_quantity, noisy_l, noisy_iterations = CRAMPS_cube_loader(output_folder,
+        noisy_solution_data, noisy_solution_quantity, noisy_l = CRAMPS_cube_loader(output_folder,
                                                                                                      "noisy",
                                                                                                      solution_parameter)
         ideal_indices = numpy.where(abs(ideal_solution_quantity) > 5e7)[0]
@@ -404,6 +412,7 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
 
 
 def CRAMPS_cube_loader(output_folder, solution_type, solution_parameter):
+    print ""
     print "loading " + output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5"
     solution_cube = h5py.File(output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
     solution_data = solution_cube['data'][:]
@@ -436,6 +445,7 @@ def solution_histogram_plotter(fig1, number_visibilities, number_tiles, solution
         # plot the amplitude data
         if j == antenna_index:
             subplot = fig1.add_subplot(nrow, ncol, 1)
+            subplot.set_xscale('log')
             subplot.set_ylim([1e-1, 1e3])
             subplot.set_ylabel(r'Frequency', fontsize=labelfontsize)
             subplot.hist(solution_data[j, l_index, :], histtype='stepfilled', edgecolor='none', alpha=0.4,
@@ -479,7 +489,6 @@ def solution_averager(output_folder, save_to_disk, solution_type, solution_param
                                                                          solution_parameter)
 
     number_iterations = solution_data.shape[2]
-    print number_iterations
     # Create empty tables, to save the results for each sky step
     data_means = table_setup(len(solution_quantity) + 1, len(l) + 1)
     data_devs = table_setup(len(solution_quantity) + 1, len(l) + 1)
@@ -492,22 +501,33 @@ def solution_averager(output_folder, save_to_disk, solution_type, solution_param
     data_means[1:, 0] = solution_quantity
     data_devs[1:, 0] = solution_quantity
 
+    #Clip data if necessary
+    if solution_parameter == 'amp':
+        averaging_data = data_clipper(solution_data, solution_quantity, 100, solution_parameter)
+    elif solution_parameter == 'phase':
+        averaging_data = data_clipper(solution_data, solution_quantity, 30, solution_parameter)
+    else:
+        sys.exit("Change solution_parameter '%s' to 'amp' or 'phase'")
+
     if number_iterations > 1:
         # calculate averages and standard deviations
         if save_to_disk[1] == 'median':
-            data_means[1:, 1:] = numpy.median(solution_data, axis=2)
+            print "taking median"
+            data_means[1:, 1:] = numpy.nanmedian(averaging_data, axis=2)
         else:
             sys.exit("save_to_disk[2] parameter should be 'median'")
 
         if save_to_disk[2] == 'std':
-            data_devs[1:, 1:] = numpy.std(solution_data, axis=2)
+            print "taking std"
+            data_devs[1:, 1:] = numpy.nanstd(averaging_data, axis=2)
+
         elif save_to_disk[2] == 'iqr':
-            data_devs[1:, 1:] = numpy.subtract(*numpy.percentile(solution_data, [75, 25], axis=2))
+            data_devs[1:, 1:] = numpy.subtract(*numpy.percentile(averaging_data, [75, 25], axis=2))
         else:
             sys.exit("save_to_disk[3] parameter should be 'std' or 'iqr'")
 
     else:
-        data_means[1:, 1:] = solution_data[:, :, 0]
+        data_means[1:, 1:] = averaging_data[:, :, 0]
         data_devs[1:, 1:] = 0
 
     numpy.savetxt(output_folder + "/" + solution_type + "_" + solution_parameter + "_" + save_to_disk[1] + ".txt",
@@ -516,6 +536,33 @@ def solution_averager(output_folder, save_to_disk, solution_type, solution_param
                   data_devs)
     return
 
+def data_clipper(solution_data,solution_quantity, threshold, solution_parameter):
+    antenna_indices = numpy.where(solution_quantity < 5e7)[0]
+
+    for index in range(len(solution_quantity)):
+
+        if solution_parameter == 'amp':
+            median = numpy.median(solution_data[index, :, :])
+            excess_indices = numpy.where(numpy.abs(solution_data[index, :, :]) > median*threshold)
+        elif solution_parameter == 'phase':
+            excess_indices = numpy.where(numpy.abs(solution_data[index, :, :]) > threshold)
+        excess_fraction = float(len(excess_indices[0]))/float(solution_data[index, :, :].size)
+        print excess_fraction
+        if excess_fraction < 1 and excess_fraction > 0 :
+            print ""
+            print "#########################"
+            print "Clipping quantity %f %f%% data with NaN" %(solution_quantity[index], excess_fraction*100.)
+           # print "the variance:", variance
+            print "the current threshold:", threshold
+            print "maximum value:", numpy.max(solution_data[index, :, :])
+            #print "shape of the excess indices:", excess_indices
+            #print len(excess_indices)
+            print "the fraction of outliers??", excess_fraction
+            print "##################"
+            #print solution_data[minimum_antenna_index:maximum_antenna_index][excess_indices].shape
+            solution_data[index, :, :][excess_indices] = numpy.nan
+
+    return solution_data
 #
 # def solution_averager(amp_solutions, phase_solutions, red_tiles, \
 #                       red_groups, sky_coords, save_to_disk, direction, noise_param):

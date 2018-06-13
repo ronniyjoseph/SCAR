@@ -1,6 +1,8 @@
 from GeneralTools import unique_value_finder
 from GeneralTools import position_finder
-
+from matplotlib import pyplot
+import traceback
+import logging
 import numpy
 
 
@@ -61,6 +63,8 @@ def LogcalMatrixPopulator(uv_positions, xyz_positions):
 
 
 def LogcalSolver(amp_pinv, phase_pinv, obs_visibilities):
+    log = logging.getLogger(__name__)
+    log.info("Running Logcal")
     # print "Preparing to solve for",len(amp_matrix[0,:]),"antennas and", \
     # len(red_groups),"unique visibilities."
     # now we can set up the logcal solver algorithm
@@ -128,58 +132,86 @@ def LincalMatrixPopulator(uv_positions, correlation_obs, gain_0, visibility_0, r
         A_matrix[2 * i + 1, 2 * (len(red_tiles) + index_group) + 1] = numpy.real(
             gain_0[index1] * numpy.conj(gain_0[index2]))
 
+    # Leave out the first two columns, i.e. don't solve for the reference antenna
+    A_submatrix = A_matrix[:, 2:]
     # Calculate the inverse matrix
     # check whether the matrix is ill conditioned
-    A_dagger = numpy.dot(A_matrix.transpose(), A_matrix)
+    A_dagger = numpy.dot(A_submatrix.transpose(), A_submatrix)
     if numpy.linalg.det(numpy.dot(numpy.linalg.pinv(A_dagger), A_dagger)) == 0:
+        # if verbose:
+        print ""
         print "WARNING: the Lincal solver matrix is singular"
-    A_pinv = numpy.dot(numpy.linalg.pinv(A_dagger), A_matrix.transpose())
+        inversion_bool = False
+    else:
+        inversion_bool = True
 
-    return A_pinv, d_correlation
+    A_pinv = numpy.dot(numpy.linalg.pinv(A_dagger), A_submatrix.transpose())
+
+    return A_pinv, d_correlation, inversion_bool
 
 
-def LincalSolver(uv_positions, correlation_obs, amp_solutions, phase_solutions, red_tiles, red_groups):
+def LincalSolver(uv_positions, correlation_obs, amp_solutions, phase_solutions, red_tiles, red_groups, diagnostic=False):
     gain_0 = amp_solutions[:len(red_tiles)] * numpy.exp(1j * phase_solutions[:len(red_tiles)])
     visibility_0 = amp_solutions[len(red_tiles):] * numpy.exp(1j * phase_solutions[len(red_tiles):])
 
-    # ~ fig = pyplot.figure()#figsize=(5,5))
-    # ~ errorsub = fig.add_subplot(1,2,1)
-    # ~ diffsub = fig.add_subplot(1,2,2)
-
-    # ~ errorsub.set_title(r'$g - g_{true}$')
-    # ~ diffsub.set_title(r'$g_{i} - g_{i - 1}$')
+    if diagnostic:
+        fig = pyplot.figure()  # figsize=(5,5))
+        errorsub = fig.add_subplot(1, 2, 1)
+        diffsub = fig.add_subplot(1, 2, 2)
+        errorsub.set_title(r'$g - g_{true}$')
+        diffsub.set_title(r'$g_{i} - g_{i - 1}$')
+        diffsub.set_yscale('log')
 
     convergence = False
 
     counter = 0
     d_corrections = 1
-    while d_corrections > 1e-9 and counter < 50:
+    while d_corrections > 1e-9 and counter < 500:
 
-        A_pinv, d_correlation = LincalMatrixPopulator(uv_positions, correlation_obs, gain_0, visibility_0, red_tiles,
-                                                      red_groups)
-        d_solutions_1 = numpy.dot(A_pinv, d_correlation)
-        d_solutions_1[0:2] = 0
+        try:
+            A_pinv, d_correlation, inversion_bool = LincalMatrixPopulator(uv_positions, correlation_obs, gain_0,
+                                                                          visibility_0, red_tiles, red_groups)
+        except:
+            gain_1 = gain_0.copy()
+            gain_1[:] = numpy.nan
+            visibility_1 = visibility_0.copy()
+            visibility_1[:] = numpy.nan
+            break
 
-        error = numpy.sum(numpy.abs(d_correlation)) / len(d_correlation)
-        # ~ errorsub.plot(counter,error,"r+")
+        if not inversion_bool:
+            gain_1 = gain_0.copy()
+            gain_1[:] = numpy.nan
+            visibility_1 = visibility_0.copy()
+            visibility_1[:] = numpy.nan
+            break
+        else:
+            d_solutions_1 = numpy.dot(A_pinv, d_correlation)
 
-        gain_1 = gain_0 + (d_solutions_1[0:2 * len(red_tiles):2] + 1j * d_solutions_1[1:2 * len(red_tiles) + 1:2])
-        visibility_1 = visibility_0 + (
-                d_solutions_1[2 * len(red_tiles)::2] + 1j * d_solutions_1[2 * len(red_tiles) + 1::2])
+            d_solutions_1 = numpy.concatenate((numpy.array([0, 0]), d_solutions_1))
+            error = numpy.sum(numpy.abs(d_correlation)) / len(d_correlation)
 
-        # calculate difference
-        if counter > 0:
-            d_corrections = numpy.sum(numpy.abs((d_solutions_1 - d_solutions_0) ** 2))  # /numpy.sum(abs(d_solutions_1))
-        # ~ diffsub.plot(counter,d_corrections,"bx")
+            gain_1 = gain_0 + (d_solutions_1[0:2 * len(red_tiles):2] + 1j * d_solutions_1[1:2 * len(red_tiles) + 1:2])
+            visibility_1 = visibility_0 + (
+                    d_solutions_1[2 * len(red_tiles)::2] + 1j * d_solutions_1[2 * len(red_tiles) + 1::2])
 
-        d_averaged_1 = numpy.sum(d_solutions_1 * numpy.conjugate(d_solutions_1))
+            # calculate difference
+            if counter > 0:
+                d_corrections = numpy.sum(numpy.abs((d_solutions_1 - d_solutions_0) ** 2))  # /numpy.sum(abs(d_solutions_1))
 
-        counter += 1
+            d_averaged_1 = numpy.sum(d_solutions_1 * numpy.conjugate(d_solutions_1))
 
-        gain_0 = gain_1.copy()
-        visibility_0 = visibility_1.copy()
-        d_solutions_0 = d_solutions_1.copy()
-        # print "Lincal required %d iterations to converge" %counter
+            counter += 1
+
+            gain_0 = gain_1.copy()
+            visibility_0 = visibility_1.copy()
+            d_solutions_0 = d_solutions_1.copy()
+            # print "Lincal required %d iterations to converge" %counter
+            if diagnostic:
+                errorsub.plot(counter, error, "r+")
+                diffsub.plot(counter, d_corrections, "bx")
+
+    if diagnostic:
+        pyplot.show()
 
     return numpy.hstack((gain_1, visibility_1))
 
