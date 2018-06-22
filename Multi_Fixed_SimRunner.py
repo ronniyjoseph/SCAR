@@ -224,7 +224,6 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     print "Simulating the Calibration of Arrays with Redundancy"
     print "Changing the source location and Position offsets"
     print "Fixed position offsets"
-
     start_time = time.time()
     if not os.path.exists(save_to_disk[1]):
         print ""
@@ -264,6 +263,21 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
 
 
 
+
+    print "current setting l_steps=:",source_position_range[2]
+    max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
+    min_l = 1. / max_b
+    delta_l = 0.1 * min_l
+    n_l_steps = int((source_position_range[1]-source_position_range[0]) / delta_l)
+
+    if n_l_steps >= source_position_range[2]:
+        source_position_range[2] = n_l_steps
+        print "Warning: source location was too low, increased to", n_l_steps
+    elif n_l_steps >= 999:
+        source_position_range[2] = 999
+
+    source_locations = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
+
     file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
     file.write("Changing Source Location and Position Offset simulation\n")
     file.write("Fixed and Scaled Positions offsets\n")
@@ -278,14 +292,6 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     file.write("Iterations: " + str(n_iterations) + "\n")
     file.close()
 
-    max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
-    min_l = 1. / max_b
-    delta_l = 0.1 * min_l
-    n_l_steps = int((source_position_range[1]-source_position_range[0]) / delta_l)
-
-    if n_l_steps >= source_position_range[2]:
-        source_position_range[2] = n_l_steps
-    source_locations = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
 
     xy_offsets = numpy.random.normal(0, 1, xyz_positions[:, 1:3].shape)
     numpy.savetxt(save_to_disk[1]+"position_offsets.txt", xy_offsets)

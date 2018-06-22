@@ -51,10 +51,10 @@ def LogcalMatrixPopulator(uv_positions, xyz_positions):
     phase_dagger = numpy.dot(phase_matrix.transpose(), phase_matrix)
     amp_dagger = numpy.dot(amp_matrix.transpose(), amp_matrix)
     if numpy.linalg.det(numpy.dot(numpy.linalg.pinv(amp_dagger), amp_dagger)) == 0:
-        print "WARNING: the amplitude solver matrix is singular"
+        print "WARNING: the LOGCAL amplitude solver matrix is singular"
 
     if numpy.linalg.det(numpy.dot(numpy.linalg.pinv(phase_dagger), phase_dagger)) == 0:
-        print "WARNING: the phase solver matrix is singular"
+        print "WARNING: the LOGCAL phase solver matrix is singular"
 
     phase_pinv = numpy.dot(numpy.linalg.pinv(phase_dagger), phase_matrix.transpose())
     amp_pinv = numpy.dot(numpy.linalg.pinv(amp_dagger), amp_matrix.transpose())
