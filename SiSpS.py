@@ -27,7 +27,7 @@ def main(output_folder,sim_type, fixed_array, multi_processing):
     telescope_param = ["hex", 14., 0, 0]
     #telescope_param = ["linear", 10, 5, 0]
 
-    calibration_scheme = 'logcal'
+    calibration_scheme = 'full'
 
     if sim_type == "changing_flux":
         if multi_processing[0]:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
      Calibration Simulation set up')
     parser.add_argument('-path', action='store',
                         default="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/"
-                                                         "TEST2_SFPO_Linear_P_BG_Logcal_NEW/",
+                                                         "TEST2_SLPO_Linear_P_BG_full_FIX/",
                         type=str)
     parser.add_argument('-sim_type',  action='store', default="moving_source",
                         type=str)
