@@ -39,6 +39,7 @@ def source_flux_and_position_offset_changer_FixedMP(telescope_param, calibration
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
 
+
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
     position_step_number = offset_range[2]
@@ -72,17 +73,9 @@ def source_flux_and_position_offset_changer_FixedMP(telescope_param, calibration
 
     xy_offsets = numpy.random.normal(0, 1, xyz_positions[:, 1:3].shape)
 
-    pool = multiprocessing.Pool(processes=processes)
-    iterator = partial(single_iteration_source_flux_position_offset_Fixed,
-                       xyz_positions, gain_table, frequency_range, peak_fluxes, position_offsets, calibration_scheme,
-                       sky_param, noise_param, beam_param, save_to_disk, red_tiles, red_groups, n_iterations, xy_offsets)
 
-    pool.map(iterator, iterations)
     numpy.savetxt(save_to_disk[1]+"position_offsets.txt", xy_offsets)
-    end_time = time.time()
 
-    runtime = end_time - start_time
-    print "Runtime", runtime
     file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "w")
     file.write("Changing Source Flux and Position Offset simulation\n")
     file.write("Fixed and Scaled Positions offsets\n")
@@ -95,6 +88,20 @@ def source_flux_and_position_offset_changer_FixedMP(telescope_param, calibration
     file.write("Offset Range: " + str(offset_range) + "\n")
     file.write("Peak Flux Range: " + str(peakflux_range) + "\n")
     file.write("Iterations: " + str(n_iterations) + "\n")
+    file.close()
+
+
+    pool = multiprocessing.Pool(processes=processes)
+    iterator = partial(single_iteration_source_flux_position_offset_Fixed,
+                       xyz_positions, gain_table, frequency_range, peak_fluxes, position_offsets, calibration_scheme,
+                       sky_param, noise_param, beam_param, save_to_disk, red_tiles, red_groups, n_iterations, xy_offsets)
+
+    pool.map(iterator, iterations)
+    end_time = time.time()
+
+    runtime = end_time - start_time
+    print "Runtime", runtime
+    file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
     return
@@ -217,7 +224,6 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     print "Simulating the Calibration of Arrays with Redundancy"
     print "Changing the source location and Position offsets"
     print "Fixed position offsets"
-
     start_time = time.time()
     if not os.path.exists(save_to_disk[1]):
         print ""
@@ -226,6 +232,8 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
         output_types = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
         for output in output_types:
             os.makedirs(save_to_disk[1] + "threaded_" + output + "/")
+
+
 
     minimum_position_offset = numpy.log10(offset_range[0])
     maximum_position_offset = numpy.log10(offset_range[1])
@@ -253,6 +261,10 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     red_baseline_table = redundant_baseline_finder(baseline_table, 'ALL', verbose=True)
     amp_matrix, phase_matrix, red_tiles, red_groups = LogcalMatrixPopulator(red_baseline_table, xyz_positions)
 
+
+
+
+    print "current setting l_steps=:",source_position_range[2]
     max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
     min_l = 1. / max_b
     delta_l = 0.1 * min_l
@@ -260,22 +272,12 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
 
     if n_l_steps >= source_position_range[2]:
         source_position_range[2] = n_l_steps
+        print "Warning: source location was too low, increased to", n_l_steps
+    elif n_l_steps >= 999:
+        source_position_range[2] = 999
+
     source_locations = numpy.linspace(source_position_range[0], source_position_range[1], source_position_range[2])
 
-    xy_offsets = numpy.random.normal(0, 1, xyz_positions[:, 1:3].shape)
-
-    pool = multiprocessing.Pool(processes=processes)
-    iterator = partial(single_iteration_source_location_position_offset_Fixed,
-                       xyz_positions, gain_table, frequency_range, source_locations, position_offsets,
-                       calibration_scheme, sky_param, noise_param, beam_param, save_to_disk, red_tiles, red_groups,
-                       n_iterations, xy_offsets)
-
-    pool.map(iterator, iterations)
-    numpy.savetxt(save_to_disk[1]+"position_offsets.txt", xy_offsets)
-    end_time = time.time()
-
-    runtime = end_time - start_time
-    print "Runtime", runtime
     file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "w")
     file.write("Changing Source Location and Position Offset simulation\n")
     file.write("Fixed and Scaled Positions offsets\n")
@@ -288,6 +290,24 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     file.write("Offset Range: " + str(offset_range) + "\n")
     file.write("Beam Parameters: " + str(beam_param) + "\n")
     file.write("Iterations: " + str(n_iterations) + "\n")
+    file.close()
+
+
+    xy_offsets = numpy.random.normal(0, 1, xyz_positions[:, 1:3].shape)
+    numpy.savetxt(save_to_disk[1]+"position_offsets.txt", xy_offsets)
+
+    pool = multiprocessing.Pool(processes=processes)
+    iterator = partial(single_iteration_source_location_position_offset_Fixed,
+                       xyz_positions, gain_table, frequency_range, source_locations, position_offsets,
+                       calibration_scheme, sky_param, noise_param, beam_param, save_to_disk, red_tiles, red_groups,
+                       n_iterations, xy_offsets)
+
+    pool.map(iterator, iterations)
+    end_time = time.time()
+
+    runtime = end_time - start_time
+    print "Runtime", runtime
+    file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
     return

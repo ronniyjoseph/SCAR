@@ -30,6 +30,14 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
                   sky_steps, input_iterations, sky_param, beam_param, calibration_scheme, save_to_disk, hist_movie):
     starttime = time.time()
 
+    if not os.path.exists(save_to_disk[1]):
+        print ""
+        print "!!!Warning: Creating output folder at output destination!"
+        print save_to_disk[1]
+        os.makedirs(save_to_disk[1])
+
+
+
     if telescope_param[0] == 'square' \
             or telescope_param[0] == 'hex' \
             or telescope_param[0] == 'doublehex' \
@@ -105,6 +113,24 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
 
     print ""
     print "Simulating redundant calibration with a %s %s sky" % (type_sim, sky_param[0])
+
+
+    file = open(save_to_disk[1] + "simulation_parameter.log", "w")
+    file.write("Standard Redundant Calibration Simulation" + "\n")
+    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
+    file.write("Telescope Offsets: " + str(offset_param) + "\n")
+    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
+    file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
+    file.write("Iterations: " + str(iterations) + "\n")
+    file.write("Noise Parameters: " + str(noise_param) + "\n")
+    file.write("Source Direction: " + direction + "\n")
+    file.write("Sky Steps: " + str(sky_steps) + "\n")
+    file.write("Sky Model: " + str(sky_param) + "\n")
+    file.write("Iterations: " + str(iterations) + "\n")
+    file.write("Beam Parameters: " + str(beam_param) + "\n")
+    file.write("Save Parameters: " + str(save_to_disk) + "\n")
+    file.close()
+
 
     for j in range(iterations):
         if numpy.mod(j, 100) == 0:
@@ -224,20 +250,7 @@ def Moving_Source(telescope_param, offset_param, calibration_channel, noise_para
     runtime = endtime - starttime
 
     # Save input parameters to log file
-    file = open(save_to_disk[1] + "simulation_parameter.log", "w")
-    file.write("Standard Redundant Calibration Simulation" + "\n")
-    file.write("Telescope Parameters: " + str(telescope_param) + "\n")
-    file.write("Telescope Offsets: " + str(offset_param) + "\n")
-    file.write("Calibration Channel: " + str(frequency_range / 1e6) + "MHz \n")
-    file.write("Calibration Scheme: " + str(calibration_scheme) + "\n")
-    file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Noise Parameters: " + str(noise_param) + "\n")
-    file.write("Source Direction: " + direction + "\n")
-    file.write("Sky Steps: " + str(sky_steps) + "\n")
-    file.write("Sky Model: " + str(sky_param) + "\n")
-    file.write("Iterations: " + str(iterations) + "\n")
-    file.write("Beam Parameters: " + str(beam_param) + "\n")
-    file.write("Save Parameters: " + str(save_to_disk) + "\n")
+    file = open(save_to_disk[1] + "simulation_parameter.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
 
