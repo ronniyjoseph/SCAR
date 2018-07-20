@@ -140,9 +140,9 @@ def save_to_hdf5(pathfolder, fname, savedata, axesdata, axeslabels):
 	"""
     # Check whether output folder is present
     if not os.path.exists(pathfolder):
-        print ""
-        print "!!!Warning: Creating output folder at output destination!"
-        print pathfolder
+        print("")
+        print("!!!Warning: Creating output folder at output destination!")
+        print(pathfolder)
         os.makedirs(pathfolder)
 
     if len(axesdata) != len(axeslabels):
@@ -163,8 +163,8 @@ def save_to_text(save_params, amp_data, phase_data, noisy, direction):
     version = save_params[1]
 
     if not os.path.exists(version):
-        print ""
-        print "!!!Warning: Creating output folder in working directory!!!"
+        print("")
+        print("!!!Warning: Creating output folder in working directory!!!")
         os.makedirs(version)
 
     if noisy:
@@ -185,19 +185,19 @@ def save_to_text(save_params, amp_data, phase_data, noisy, direction):
 def visibility_histogram_plotter(amp_obs, phase_obs, amp_mod, phase_mod, \
                                  sky_steps, noisy_amp_info_l, noisy_phase_info_l, output_folder):
     if not os.path.exists(output_folder):
-        print ""
-        print "!!!Warning: Creating output folder in working directory!!!"
+        print("")
+        print("!!!Warning: Creating output folder in working directory!!!")
         os.makedirs(output_folder)
 
-    print ""
-    print "Creating histogram video of the visibilities"
+    print("")
+    print("Creating histogram video of the visibilities")
 
     labelfontsize = 14
 
     number_visibilities = len(amp_obs[:, 1, 1])
     l = sky_steps
 
-    print "Preprocessing the data"
+    print("Preprocessing the data")
     min_amp_obs = numpy.zeros((number_visibilities, len(sky_steps)))
     min_amp_mod = numpy.zeros((number_visibilities, len(sky_steps)))
 
@@ -233,7 +233,7 @@ def visibility_histogram_plotter(amp_obs, phase_obs, amp_mod, phase_mod, \
     min_smooth[min_smooth < 0] = -10.
 
     # Create the actual okits
-    print "Generating plots"
+    print("Generating plots")
     for i in range(len(l)):
         ampfig1 = pyplot.figure(figsize=(16, 10))
         phasefig1 = pyplot.figure(figsize=(16, 10))
@@ -349,10 +349,10 @@ def visibility_histogram_plotter(amp_obs, phase_obs, amp_mod, phase_mod, \
 
     execution_path = os.getcwd()
     os.chdir(output_folder)
-    print "Generating video"
+    print("Generating video")
     subprocess.call("ffmpeg -y -framerate 5 -start_number 1000 -i vis_amp_%d.png vis_amp.mp4", shell=True)
     subprocess.call("ffmpeg -y -framerate 5 -start_number 1000 -i vis_phase_%d.png vis_phase.mp4", shell=True)
-    print "Cleaning up plots"
+    print("Cleaning up plots")
     subprocess.call("rm vis_phase_*.png", shell=True)
     subprocess.call("rm vis_amp_*.png", shell=True)
 
@@ -361,12 +361,12 @@ def visibility_histogram_plotter(amp_obs, phase_obs, amp_mod, phase_mod, \
 
 def solution_histogram_plotter(amp_solutions, phase_solutions, noisy_amp_info_l, noisy_phase_info_l, output_folder):
     if not os.path.exists(output_folder):
-        print ""
-        print "!!!Warning: Creating output folder in working directory!!!"
+        print("")
+        print("!!!Warning: Creating output folder in working directory!!!")
         os.makedirs(output_folder)
 
-    print ""
-    print "Creating histogram video of the solutions"
+    print("")
+    print("Creating histogram video of the solutions")
 
     labelfontsize = 14
 
@@ -383,7 +383,7 @@ def solution_histogram_plotter(amp_solutions, phase_solutions, noisy_amp_info_l,
     # max_gain_phase = numpy.max(phase_solutions[0:number_tiles,:,:])
     # max_vis_phase  = numpy.max(phase_solutions[number_tiles:number_tiles+number_visibilities,:,:])
 
-    print "Generating plots"
+    print("Generating plots")
     for i in range(len(l)):
         ampfig1 = pyplot.figure(figsize=(16, 10))
         phasefig1 = pyplot.figure(figsize=(16, 10))
@@ -522,10 +522,10 @@ def solution_histogram_plotter(amp_solutions, phase_solutions, noisy_amp_info_l,
 
     execution_path = os.getcwd()
     os.chdir(output_folder)
-    print "Generating video"
+    print("Generating video")
     subprocess.call("ffmpeg -y -framerate 5 -start_number 1000 -i gain_amp_%d.png gain_amp.mp4", shell=True)
     subprocess.call("ffmpeg -y -framerate 5 -start_number 1000 -i gain_phase_%d.png gain_phase.mp4", shell=True)
-    print "Cleaning up plots"
+    print("Cleaning up plots")
     subprocess.call("rm gain_phase_*.png", shell=True)
     subprocess.call("rm gain_amp_*.png", shell=True)
 
@@ -555,8 +555,8 @@ def TrueSolutions_Organizer(gain_table, model_vis, red_baseline_table, red_tiles
 
 
 def off_set_finder(redundant_uvw_positions, centraltype):
-    print ""
-    print "Calculating the offsets for the redundant baselines"
+    print("")
+    print("Calculating the offsets for the redundant baselines")
     redundant_uvw_offset = redundant_uvw_positions.copy()
 
     # go through each group calculate the median

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 import sys
 from scipy import interpolate
@@ -301,10 +302,10 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
     #now we have the bin edges we can start binning our baseline table
     #Create an empty array to store our baseline measurements in
     visibilities = numpy.zeros((n_measurements, n_frequencies), dtype=complex)
-    #print len(uv_grid[0])
-    #print len(uv_grid[1])
-    #print visibility_grid.shape
-    #print baseline_table[:, 2, 0]
+    #print(len(uv_grid[0])
+    #print(len(uv_grid[1])
+    #print(visibility_grid.shape
+    #print(baseline_table[:, 2, 0]
     for frequency_index in range(n_frequencies):
         visibility_data = visibility_grid[:, :, frequency_index]
 
@@ -319,7 +320,7 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
         #u_index = numpy.digitize(baseline_table[:, 2, frequency_index], bins=u_bin_edges)
         #v_index = numpy.digitize(baseline_table[:, 3, frequency_index], bins=v_bin_edges)
 
-        #print "centers in u bins", u_bin_centers[u_index-1]
+        #print("centers in u bins", u_bin_centers[u_index-1]
         #visibilities[:, frequency_index] = visibility_grid[u_index, v_index,frequency_index]
 
     return visibilities

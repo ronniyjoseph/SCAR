@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 import os
 import sys
@@ -26,14 +27,14 @@ def source_flux_and_position_offset_changer_FixedMP(telescope_param, calibration
     """
     """
 
-    print "Simulating the Calibration of Arrays with Redundancy"
-    print "Changing Maximum Flux and Position offsets"
-    print "Fixed position offsets"
+    print("Simulating the Calibration of Arrays with Redundancy")
+    print("Changing Maximum Flux and Position offsets")
+    print("Fixed position offsets")
     start_time = time.time()
 
     if not os.path.exists(save_to_disk[1]):
-        print ""
-        print "!!!Warning: Creating output folder at output destination!"
+        print("")
+        print("!!!Warning: Creating output folder at output destination!")
         os.makedirs(save_to_disk[1])
         output_types = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
         for output in output_types:
@@ -100,7 +101,7 @@ def source_flux_and_position_offset_changer_FixedMP(telescope_param, calibration
     end_time = time.time()
 
     runtime = end_time - start_time
-    print "Runtime", runtime
+    print("Runtime", runtime)
     file = open(save_to_disk[1] + "SFPO_simulation_parameters.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
@@ -221,13 +222,13 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
                                                         processes):
     """
     """
-    print "Simulating the Calibration of Arrays with Redundancy"
-    print "Changing the source location and Position offsets"
-    print "Fixed position offsets"
+    print("Simulating the Calibration of Arrays with Redundancy")
+    print("Changing the source location and Position offsets")
+    print("Fixed position offsets")
     start_time = time.time()
     if not os.path.exists(save_to_disk[1]):
-        print ""
-        print "!!!Warning: Creating output folder at output destination!"
+        print("")
+        print("!!!Warning: Creating output folder at output destination!")
         os.makedirs(save_to_disk[1])
         output_types = ["ideal_amp", "ideal_phase", "noisy_amp", "noisy_phase"]
         for output in output_types:
@@ -264,7 +265,7 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
 
 
 
-    print "current setting l_steps=:",source_position_range[2]
+    print("current setting l_steps=:",source_position_range[2])
     max_b = numpy.max(numpy.abs(baseline_table[:, 2:4, -1]))
     min_l = 1. / max_b
     delta_l = 0.1 * min_l
@@ -272,7 +273,7 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
 
     if n_l_steps >= source_position_range[2]:
         source_position_range[2] = n_l_steps
-        print "Warning: source location was too low, increased to", n_l_steps
+        print("Warning: source location was too low, increased to", n_l_steps)
     elif n_l_steps >= 999:
         source_position_range[2] = 999
 
@@ -306,7 +307,7 @@ def source_location_and_position_offset_changer_FixedMP(telescope_param, calibra
     end_time = time.time()
 
     runtime = end_time - start_time
-    print "Runtime", runtime
+    print("Runtime", runtime)
     file = open(save_to_disk[1] + "SLPO_simulation_parameters.log", "a")
     file.write("Runtime: " + str(runtime) + "\n")
     file.close()
@@ -346,7 +347,7 @@ def single_iteration_source_location_position_offset_Fixed(xyz_positions, gain_t
                 background_model = ['background']
                 obs_background, ideal_background, model_background = \
                     numerical_visibilities(off_red_baseline_table, frequency_range, noise_param, background_model,
-                                           beam_param, iteration)
+                                           beam_param, iteration+1000)
 
             for location_index in range(len(source_locations)):
                 if sky_param[0] == "point":

@@ -18,17 +18,14 @@ def main(output_folder,sim_type, fixed_array, multi_processing):
     iterations = 999
     peakflux_range = [50, 1.5e3, 49]    #Specify in Jy
     offset_range = [1e-2, 0.5, 51]  #Specify in m
-    source_position_range = [-1, 1, 777]
+    source_position_range = [0, 1, 388]
     save_to_disk = [True, output_folder]
     telescope_param = ["hex", 14., 0, 0]
     #telescope_param = ["linear", 10, 5, 0]
 
-<<<<<<< HEAD
     calibration_scheme = 'full'
 
-=======
-    calibration_scheme = 'logcal'
->>>>>>> lincal_update
+
     if sim_type == "changing_flux":
         if multi_processing[0]:
             if fixed_array:
@@ -76,11 +73,8 @@ if __name__ == "__main__":
      Calibration Simulation set up')
     parser.add_argument('-path', action='store',
                         default="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/"
-<<<<<<< HEAD
-                                                         "TEST2_SLPO_Linear_P_BG_full_FIX/",
-=======
-                                                         "TEST0_SLPO_Hex_P_BG_logcal_FIX/",
->>>>>>> lincal_update
+                                                         "TEST0_SLPO_Hex_P_BG_full_FIX_half_range/",
+
                         type=str)
     parser.add_argument('-sim_type',  action='store', default="moving_source",
                         type=str)

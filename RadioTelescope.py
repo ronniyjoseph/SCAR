@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+import sys
 import numpy
 import scipy.constants
 
@@ -28,8 +31,8 @@ def xyz_position_creator(shape, verbose = True):
 	"""
     if shape[0] == "square" or shape[0] == 'doublesquare':
         if verbose:
-            print ""
-            print "Creating x- y- z-positions of a square array"
+            print("")
+            print("Creating x- y- z-positions of a square array")
         x_coordinates = numpy.arange(-shape[1], shape[1], shape[2])
         y_coordinates = numpy.arange(-shape[1], shape[1], shape[2])
 
@@ -56,8 +59,8 @@ def xyz_position_creator(shape, verbose = True):
 
     elif shape[0] == 'hex' or shape[0] == 'doublehex':
         if verbose:
-            print ""
-            print "Creating x- y- z-positions of a " + shape[0] + " array"
+            print("")
+            print("Creating x- y- z-positions of a " + shape[0] + " array")
 
         dx = shape[1]
         dy = dx * numpy.sqrt(3.) / 2.
@@ -109,8 +112,8 @@ def xyz_position_creator(shape, verbose = True):
 
     elif shape[0] == 'linear':
         if verbose:
-            print ""
-            print "Creating x- y- z-positions of a " + str(shape[2]) + " element linear array"
+            print("")
+            print("Creating x- y- z-positions of a " + str(shape[2]) + " element linear array")
         xyz_coordinates = numpy.zeros((shape[2], 4))
         xyz_coordinates[:, 0] = numpy.arange(shape[2]) + 1001
         xyz_coordinates[:, 1] = numpy.linspace(-shape[1], shape[1], shape[2])
@@ -122,8 +125,8 @@ def xyz_position_creator(shape, verbose = True):
 
 def baseline_converter(xy_positions, gain_table, frequency_channels, verbose=True):
     if verbose:
-        print ""
-        print "Converting xyz to uvw-coordinates"
+        print("")
+        print("Converting xyz to uvw-coordinates")
 
     # calculate the wavelengths of the adjecent channels
     wavelength_range = scipy.constants.c / frequency_channels
@@ -138,9 +141,9 @@ def baseline_converter(xy_positions, gain_table, frequency_channels, verbose=Tru
     uv_positions = numpy.zeros((number_of_baselines, 7, n_channels))
 
     if verbose:
-        print ""
-        print "Number of antenna =", number_of_antenna
-        print "Total number of baselines =", number_of_baselines
+        print("")
+        print("Number of antenna =", number_of_antenna)
+        print("Total number of baselines =", number_of_baselines)
 
     # arbitrary counter to keep track of the baseline table
     k = 0
@@ -184,7 +187,7 @@ def redundant_baseline_finder(uv_positions, baseline_direction,verbose=False):
 
     n_baselines = uv_positions.shape[0]
     n_frequencies = uv_positions.shape[2]
-    middle_index = (n_frequencies + 1) / 2 - 1
+    middle_index = (n_frequencies + 1) // 2 - 1
     # create empty table
     baseline_selection = numpy.zeros((n_baselines, 8, n_frequencies))
     # arbitrary counters
@@ -228,8 +231,8 @@ def redundant_baseline_finder(uv_positions, baseline_direction,verbose=False):
         uv_positions = uv_positions[unselected_indices]
 
     if verbose:
-        print "There are", k, "redundant baselines in this array."
-        print "There are", group_counter, "redundant groups in this array"
+        print("There are", k, "redundant baselines in this array.")
+        print("There are", group_counter, "redundant groups in this array")
 
     # find the filled entries
     non_zero_indices = numpy.where(baseline_selection[:, 0, 0] != 0)
@@ -275,7 +278,7 @@ def antenna_gain_creator(xyz_positions, frequency_channels):
 
 
 def antenna_table_loader(path):
-    print path
+    print(path)
     antenna_data = numpy.loadtxt(path)
 
     # sort the antenna based on x- and y-coordinates.

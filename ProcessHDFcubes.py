@@ -2,8 +2,9 @@ from CubeProcessing import data_processor
 
 
 def main():
-    output_path ="/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/" \
-                  "TEST0_SLPO_Hex_P_BG_logcal_FIX/"
+    output_path ="/Users/ronniyjoseph/Sync/PhD/Projects/redundant_calibration/simulation_output/" \
+                  "CRAMPS_Linear_ideal_P100_BG_fullcal/"
+    output_path = "/home/rjoseph/Bulk/Redundant_Calibration/Simulation_Output/TEST0_SLPO_Hex_P_BG_full_FIX/"
     #output_path = "/Users/ronniyjoseph/Sync/PhD/Projects/redundant_calibration/simulation_output/" \
     #          "TEST0_SLPO_Hex_P_BG_logcal_FIX/"
     simulation_type = "CRAMPS"

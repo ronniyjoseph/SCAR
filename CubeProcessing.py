@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 import h5py
 import os
@@ -61,8 +62,8 @@ def data_stacker3D(folder, simulation_type):
         solution_axes2 = solution_slice[axes_keys[2]][:]
         solution_slice.close()
 
-        print ""
-        print "Input stuff"
+        print("")
+        print("Input stuff")
 
         data_cube = numpy.zeros(
             (solution_data.shape[0], solution_data.shape[1], len(list_directory)))
@@ -84,11 +85,11 @@ def data_stacker4D(folder, simulation_type):
     for output in output_list:
         thread_path = folder + "/threaded_" + output
         list_directory = sorted(os.listdir(thread_path))
-        print len(list_directory)
+        print(len(list_directory))
         test_index = 0
         # open op a file to get the right dimensions
         solution_slice = h5py.File(thread_path + "/" + list_directory[test_index], 'r')
-        print thread_path + "/" + list_directory[test_index]
+        print(thread_path + "/" + list_directory[test_index])
         axes_keys = solution_slice.keys()
 
         solution_data = solution_slice['data'][:]
@@ -96,8 +97,8 @@ def data_stacker4D(folder, simulation_type):
         solution_axes2 = solution_slice[axes_keys[2]][:]
         solution_axes3 = solution_slice[axes_keys[3]][:]
         solution_slice.close()
-        print ""
-        print "Input stuff"
+        print("")
+        print("Input stuff")
 
         data_cube = numpy.zeros(
             (solution_data.shape[0], solution_data.shape[1], solution_data.shape[2], len(list_directory)))
@@ -110,7 +111,7 @@ def data_stacker4D(folder, simulation_type):
         data_axes = [solution_axes1, solution_axes2, solution_axes3, numpy.arange(len(list_directory))]
         axes_keys.append("iteration")
         cube_name = simulation_type + "_" + output + "_solutions"
-        print cube_name
+        print(cube_name)
         save_to_hdf5(folder, cube_name, data_cube, data_axes, axes_keys[1:])
 
 
@@ -132,8 +133,8 @@ def SiSps_histogram_inspection(output_folder, simulation_type, solution_type):
 
 
 def create_solution_histogram_tile(output_folder, simulation_type, solution_type, solution_parameter):
-    print ""
-    print "Loading data"
+    print("")
+    print("Loading data")
     if solution_type == "ideal":
         ideal_solution_data, parameters, position_offsets, peak_fluxes, ideal_iterations = \
             SiSpS_cube_loader(output_folder, simulation_type, "ideal", solution_parameter)
@@ -171,17 +172,17 @@ def create_solution_histogram_tile(output_folder, simulation_type, solution_type
     loop_number = 0
     while True:
         if loop_number == 0:
-            print "Welcome to the interactive SiSps HDF5 Cube Histogram Plotter, which quantity do you want to plot?"
+            print("Welcome to the interactive SiSps HDF5 Cube Histogram Plotter, which quantity do you want to plot?")
         else:
-            print ""
-            print "Do you want inspect another quantity:"
+            print("")
+            print("Do you want inspect another quantity:")
 
         for quantity in parameters:
             if quantity < 5e7:
-                print "Antenna: ", int(quantity)
+               print("Antenna: ", int(quantity))
             else:
-                print "Visibility: ", int(quantity)
-        print "To exit : q"
+               print("Visibility: ", int(quantity))
+        print("To exit : q")
         user_choice = raw_input("Your choice of the day :")
 
         if user_choice == "q":
@@ -192,7 +193,7 @@ def create_solution_histogram_tile(output_folder, simulation_type, solution_type
             quantity_index = numpy.where(user_quantity == parameters.astype(int))[0]
 
             # pass this along to plotting function which creates a tile
-            print "Generating plots"
+            print("Generating plots")
             fig1 = pyplot.figure(figsize=(4 * len(position_offsets), 4 * len(peak_fluxes)))
             if solution_type == "ideal":
                 fig1 = plot_solution_histogram_tile(fig1, solution_parameter,
@@ -231,7 +232,7 @@ def plot_solution_histogram_tile(fig1, solution_parameter, solution_data, positi
     stepsize = 2
     if (row_end - row_start) / stepsize > 5:
         rows = numpy.arange(row_start, row_end, (row_end - row_start) / 5)
-        print rows
+        print(rows)
     else:
         rows = numpy.arange(row_start, row_end, stepsize)
     if (col_end - col_start) / stepsize > 5:
@@ -262,7 +263,7 @@ def plot_solution_histogram_tile(fig1, solution_parameter, solution_data, positi
                 for dataset_number in range(len(solution_data)):
 
                     selected_data = solution_data[dataset_number][0,offset_index,flux_index, :]
-                    print selected_data.shape
+                    print(selected_data.shape)
                     if solution_parameter == 'amp':
                         histogram_data.append(selected_data[~numpy.isnan(selected_data)])
                     if solution_parameter == 'phase':
@@ -302,7 +303,7 @@ def SiSpS_cube_loader(output_folder, simulation_type, solution_type, solution_pa
 
     solution_cube = h5py.File(
         output_folder + "/" + simulation_type + "_" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
-    print output_folder + "/" + simulation_type + "_" + solution_type + "_" + solution_parameter + "_solutions.h5"
+    print(output_folder + "/" + simulation_type + "_" + solution_type + "_" + solution_parameter + "_solutions.h5")
 
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
@@ -331,12 +332,12 @@ def CRAMPS_histogram_inspection(output_folder, solution_type):
 
 def create_solution_histogram_video(output_folder, solution_type, solution_parameter):
     if not os.path.exists(output_folder + '/temp_' + solution_parameter + '/'):
-        print ""
-        print "Creating temporary output folder in " + output_folder + " directory"
+        print("")
+        print("Creating temporary output folder in " + output_folder + " directory")
         os.makedirs(output_folder + '/temp_' + solution_parameter + '/')
 
-    print ""
-    print "Loading data"
+    print("")
+    print("Loading data")
     if solution_type == "ideal":
         ideal_solution_data, ideal_solution_quantity, l = CRAMPS_cube_loader(output_folder,
                                                                                                solution_type,
@@ -369,10 +370,10 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
             number_tiles = len(ideal_solution_quantity) - number_visibilities
             l = noisy_l
 
-    print ""
-    print "Creating histogram video of the solutions"
+    print("")
+    print("Creating histogram video of the solutions")
 
-    print "Generating plots"
+    print("Generating plots")
     for i in range(len(l)):
         fig1 = pyplot.figure(figsize=(16, 10))
         if solution_type == "ideal":
@@ -394,17 +395,17 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
         pyplot.close(fig1)
 
     execution_path = os.getcwd()
-    print "Entering temporary directory"
+    print("Entering temporary directory")
     os.chdir(output_folder + '/temp_' + solution_parameter + '/')
-    print "Generating video"
+    print("Generating video")
     subprocess.call(
         "ffmpeg -y -framerate 5 -start_number 1000 -i gain_" + solution_parameter + "%d.png gain_" + solution_parameter + ".mp4",
         shell=True)
     os.chdir("..")
 
-    print "Returning to " + output_folder + " directory"
+    print("Returning to " + output_folder + " directory")
     subprocess.call('cp temp_' + solution_parameter + '/gain_' + solution_parameter + ".mp4 .", shell=True)
-    print "Cleaning up plots"
+    print("Cleaning up plots")
     subprocess.call("rm -r temp_" + solution_parameter, shell=True)
 
     os.chdir(execution_path)
@@ -412,8 +413,8 @@ def create_solution_histogram_video(output_folder, solution_type, solution_param
 
 
 def CRAMPS_cube_loader(output_folder, solution_type, solution_parameter):
-    print ""
-    print "loading " + output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5"
+    print("")
+    print("loading " + output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5")
     solution_cube = h5py.File(output_folder + "/" + solution_type + "_" + solution_parameter + "_solutions.h5", 'r')
     solution_data = solution_cube['data'][:]
     solution_quantity = solution_cube['parameters'][:]
@@ -503,7 +504,7 @@ def solution_averager(output_folder, save_to_disk, solution_type, solution_param
 
     #Clip data if necessary
     if solution_parameter == 'amp':
-        averaging_data = data_clipper(solution_data, solution_quantity, 100, solution_parameter)
+        averaging_data = data_clipper(solution_data, solution_quantity, 80, solution_parameter)
     elif solution_parameter == 'phase':
         averaging_data = data_clipper(solution_data, solution_quantity, 30, solution_parameter)
     else:
@@ -512,13 +513,13 @@ def solution_averager(output_folder, save_to_disk, solution_type, solution_param
     if number_iterations > 1:
         # calculate averages and standard deviations
         if save_to_disk[1] == 'median':
-            print "taking median"
+            print("taking median")
             data_means[1:, 1:] = numpy.nanmedian(averaging_data, axis=2)
         else:
             sys.exit("save_to_disk[2] parameter should be 'median'")
 
         if save_to_disk[2] == 'std':
-            print "taking std"
+            print("taking std")
             data_devs[1:, 1:] = numpy.nanstd(averaging_data, axis=2)
 
         elif save_to_disk[2] == 'iqr':
@@ -543,22 +544,22 @@ def data_clipper(solution_data,solution_quantity, threshold, solution_parameter)
 
         if solution_parameter == 'amp':
             median = numpy.median(solution_data[index, :, :])
-            excess_indices = numpy.where(numpy.abs(solution_data[index, :, :]) > median*threshold)
+            excess_indices = numpy.where(numpy.abs(solution_data[index, :, :]) > threshold)
         elif solution_parameter == 'phase':
             excess_indices = numpy.where(numpy.abs(solution_data[index, :, :]) > threshold)
         excess_fraction = float(len(excess_indices[0]))/float(solution_data[index, :, :].size)
-        print excess_fraction
+        print(excess_fraction)
         if excess_fraction < 1 and excess_fraction > 0 :
-            print ""
-            print "#########################"
-            print "Clipping quantity %f %f%% data with NaN" %(solution_quantity[index], excess_fraction*100.)
-           # print "the variance:", variance
-            print "the current threshold:", threshold
-            print "maximum value:", numpy.max(solution_data[index, :, :])
-            #print "shape of the excess indices:", excess_indices
-            #print len(excess_indices)
-            print "the fraction of outliers??", excess_fraction
-            print "##################"
+            print("")
+            print("#########################")
+            print("Clipping quantity %f %f%% data with NaN" %(solution_quantity[index], excess_fraction*100.))
+           #print("the variance:", variance)
+            print("the current threshold:", threshold)
+            print("maximum value:", numpy.max(solution_data[index, :, :]))
+            #print "shape of the excess indices:", excess_indices)
+            #print len(excess_indices))
+            print("the fraction of outliers??", excess_fraction)
+            print("##################")
             #print solution_data[minimum_antenna_index:maximum_antenna_index][excess_indices].shape
             solution_data[index, :, :][excess_indices] = numpy.nan
 
