@@ -255,18 +255,24 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
     max_u = numpy.max(numpy.abs(baseline_table[:, 2, -1]))
     max_v = numpy.max(numpy.abs(baseline_table[:, 3, -1]))
     max_b = max(max_u,max_v)
+
     #sky_resolutions
     min_l = 1./max_b
     delta_l = 0.1*min_l
+
+
+
     l_pixel_dimension = int(2./delta_l)
     if l_pixel_dimension % 2 == 0:
         l_pixel_dimension += 1
     n_frequencies = baseline_table.shape[2]
 
     #empty sky_image
-    sky_image =  numpy.zeros((l_pixel_dimension,l_pixel_dimension,n_frequencies))
+    sky_image = numpy.zeros((l_pixel_dimension,l_pixel_dimension,n_frequencies))
 
-    l_coordinates = numpy.linspace(-1,1,l_pixel_dimension)
+    l_coordinates = numpy.linspace(-1, 1, l_pixel_dimension)
+
+
 
     l_shifts = numpy.diff(l_coordinates)/2.
 
@@ -279,7 +285,10 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
         sky_image[:, :, frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
                                                            bins=(l_bin_edges, l_bin_edges),
                                                            weights=source_flux)
-    return sky_image, l_coordinates, l_coordinates
+    print(numpy.diff(l_coordinates))
+    print(2/(l_pixel_dimension))
+
+    return sky_image/(2/l_pixel_dimension)**2., l_coordinates, l_coordinates
 
 
 def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
