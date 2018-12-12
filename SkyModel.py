@@ -288,7 +288,7 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
 
     #normalise skyimage for pixel size Jy/beam
     normalised_sky_image = sky_image/(2/l_pixel_dimension)**2.
-    return sky_image, l_coordinates, l_coordinates
+    return normalised_sky_image, l_coordinates, l_coordinates
 
 
 def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
