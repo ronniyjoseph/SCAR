@@ -263,6 +263,7 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
 
 
     l_pixel_dimension = int(2./delta_l)
+
     if l_pixel_dimension % 2 == 0:
         l_pixel_dimension += 1
     n_frequencies = baseline_table.shape[2]
@@ -271,7 +272,6 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
     sky_image = numpy.zeros((l_pixel_dimension,l_pixel_dimension,n_frequencies))
 
     l_coordinates = numpy.linspace(-1, 1, l_pixel_dimension)
-
 
 
     l_shifts = numpy.diff(l_coordinates)/2.
