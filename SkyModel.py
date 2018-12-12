@@ -126,7 +126,7 @@ def numerical_visibilities(baseline_table, frequencies, noise_param, sky_model,
     #shift the zero point of the array to [0,0]
     shifted_image = numpy.fft.ifftshift(attenuated_image, axes=(0, 1))
     visibility_grid, uv_coordinates = powerbox.dft.fft(shifted_image, L=2., axes=(0, 1))
-    normalised_visibilities = visibility_grid/delta_l[0]**2.
+    normalised_visibilities = visibility_grid
 
     model_visibilities = uv_list_to_baseline_measurements(baseline_table, normalised_visibilities, uv_coordinates)
     ideal_visibilities = model_visibilities*baseline_table[:, 5, :]*numpy.exp(1j *baseline_table[:, 6, :])
@@ -285,10 +285,10 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
         sky_image[:, :, frequency_index], l_bins, m_bins = numpy.histogram2d(source_l, source_m,
                                                            bins=(l_bin_edges, l_bin_edges),
                                                            weights=source_flux)
-    print(numpy.diff(l_coordinates))
-    print(2/(l_pixel_dimension))
 
-    return sky_image/(2/l_pixel_dimension)**2., l_coordinates, l_coordinates
+    #normalise skyimage for pixel size Jy/beam
+    normalised_sky_image = sky_image/(2/l_pixel_dimension)**2.
+    return sky_image, l_coordinates, l_coordinates
 
 
 def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
@@ -320,8 +320,6 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
 
         real_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.real(visibility_data))
         imag_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.imag(visibility_data))
-
-        baseline_coordinates  = numpy.stack((baseline_table[:, 2, frequency_index], baseline_table[:, 3, frequency_index]), axis=1)
 
         visibilities[:, frequency_index] = real_component(baseline_table[:, 2:4, frequency_index]) + \
                                            1j*imag_component(baseline_table[:, 2:4, frequency_index])
