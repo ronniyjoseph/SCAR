@@ -128,7 +128,7 @@ def baseline_converter(xy_positions, gain_table, frequency_channels, verbose=Tru
         print("")
         print("Converting xyz to uvw-coordinates")
 
-    assert min(frequency_channels) < 1e6, "Frequency range is smaller 1 MHz, probably wrong units"
+    assert min(frequency_channels) > 1e6, "Frequency range is smaller 1 MHz, probably wrong units"
 
     # calculate the wavelengths of the adjecent channels
     wavelength_range = scipy.constants.c / frequency_channels
@@ -267,7 +267,7 @@ def antenna_gain_creator(xyz_positions, frequency_channels):
     """
 	"""
     n_channels = len(frequency_channels)
-    assert min(frequency_channels) < 1e6, "Frequency range is smaller 1 MHz, probably wrong units"
+    assert numpy.min(frequency_channels) > 1e6, "Frequency range is smaller 1 MHz, probably wrong units"
     gain_table = numpy.zeros((len(xyz_positions[:, 0]), 3, n_channels))
     # fill in the antenna id's
     gain_table[:, 0, :] = numpy.array([xyz_positions[:, 0], ] * n_channels).transpose()

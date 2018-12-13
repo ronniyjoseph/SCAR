@@ -5,6 +5,11 @@ from scipy import interpolate
 from matplotlib import pyplot
 import powerbox
 
+"""
+TODO: take care of curved sky, i.e. pixels at edge contain more sources
+"""
+
+
 def analytic_visibilities(baseline_table, frequencies, noise_param, sky_model,
                        beam, seed):
 
@@ -295,18 +300,11 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
     n_frequencies = baseline_table.shape[2]
     n_measurements = baseline_table.shape[0]
     # #First of all convert the uv_grid to a bin_edges array
-    # u_bin_centers = uv_grid[0]
-    # v_bin_centers = uv_grid[1]
-    #
-    # u_shifts = numpy.diff(u_bin_centers)/2.
-    # v_shifts = numpy.diff(v_bin_centers)/2.
-    #
-    # u_bin_edges = numpy.concatenate((numpy.array([u_bin_centers[0] - u_shifts[0]]),
-    #                            u_bin_centers[1:] - u_shifts,
-    #                            numpy.array([u_bin_centers[-1] + u_shifts[-1]])))
-    # v_bin_edges = numpy.concatenate((numpy.array([v_bin_centers[0] - v_shifts[0]]),
-    #                            v_bin_centers[1:] - v_shifts,
-    #                            numpy.array([v_bin_centers[-1] + v_shifts[-1]])))
+    u_bin_size = numpy.median(numpy.diff(uv_grid[0]))
+    v_bin_size = numpy.median(numpy.diff(uv_grid[1]))
+
+    u_bin_centers = uv_grid[0] - u_bin_size / 2.
+    v_bin_centers = uv_grid[1] - v_bin_size / 2.
 
     #now we have the bin edges we can start binning our baseline table
     #Create an empty array to store our baseline measurements in
@@ -318,8 +316,8 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
     for frequency_index in range(n_frequencies):
         visibility_data = visibility_grid[:, :, frequency_index]
 
-        real_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.real(visibility_data))
-        imag_component = interpolate.RegularGridInterpolator((uv_grid[0], uv_grid[1]), numpy.imag(visibility_data))
+        real_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.real(visibility_data))
+        imag_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.imag(visibility_data))
 
         visibilities[:, frequency_index] = real_component(baseline_table[:, 2:4, frequency_index]) + \
                                            1j*imag_component(baseline_table[:, 2:4, frequency_index])
