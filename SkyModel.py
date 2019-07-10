@@ -263,7 +263,7 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
 
     #sky_resolutions
     min_l = 1./max_b
-    delta_l = 0.1*min_l
+    delta_l = 0.2*min_l
 
 
 
@@ -274,7 +274,7 @@ def flux_list_to_sky_image(point_source_list, baseline_table):
     n_frequencies = baseline_table.shape[2]
 
     #empty sky_image
-    sky_image = numpy.zeros((l_pixel_dimension,l_pixel_dimension,n_frequencies))
+    sky_image = numpy.zeros((l_pixel_dimension, l_pixel_dimension, n_frequencies))
 
     l_coordinates = numpy.linspace(-1, 1, l_pixel_dimension)
 
@@ -309,18 +309,17 @@ def uv_list_to_baseline_measurements(baseline_table, visibility_grid, uv_grid):
     #now we have the bin edges we can start binning our baseline table
     #Create an empty array to store our baseline measurements in
     visibilities = numpy.zeros((n_measurements, n_frequencies), dtype=complex)
-    #print(len(uv_grid[0])
-    #print(len(uv_grid[1])
-    #print(visibility_grid.shape
-    #print(baseline_table[:, 2, 0]
+
     for frequency_index in range(n_frequencies):
         visibility_data = visibility_grid[:, :, frequency_index]
 
         real_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.real(visibility_data))
         imag_component = interpolate.RegularGridInterpolator((u_bin_centers, v_bin_centers), numpy.imag(visibility_data))
 
+
         visibilities[:, frequency_index] = real_component(baseline_table[:, 2:4, frequency_index]) + \
                                            1j*imag_component(baseline_table[:, 2:4, frequency_index])
+
 
         #u_index = numpy.digitize(baseline_table[:, 2, frequency_index], bins=u_bin_edges)
         #v_index = numpy.digitize(baseline_table[:, 3, frequency_index], bins=v_bin_edges)
@@ -335,7 +334,7 @@ def beam_attenuator(sky_image, beam_param, frequencies):
     l_coordinates = numpy.linspace(-1,1,sky_image.shape[0])
     m_coordinates = numpy.linspace(-1,1,sky_image.shape[1])
 
-    l_mesh, m_mesh, frequency_mesh = numpy.meshgrid(l_coordinates,m_coordinates,frequencies,indexing="ij")
+    l_mesh, m_mesh, frequency_mesh = numpy.meshgrid(l_coordinates,m_coordinates,frequencies, indexing="ij")
     width_l = beam_param[1]
     width_m = beam_param[2]
     if beam_param[0] == 'gaussian':
