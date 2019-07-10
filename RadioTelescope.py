@@ -284,6 +284,5 @@ def antenna_table_loader(path):
     antenna_data = numpy.loadtxt(path)
 
     # sort the antenna based on x- and y-coordinates.
-    antenna_data = antenna_data[numpy.argsort(antenna_data[:, 1])]
-    antenna_data = antenna_data[numpy.argsort(antenna_data[:, 2])]
+    antenna_data = antenna_data[numpy.argsort(antenna_data[:, 0])]
     return antenna_data
